@@ -1,0 +1,55 @@
+# 🔥 Aliases para Monorepo Finanças
+# Adicione estas linhas ao seu ~/.zshrc ou ~/.bashrc
+
+# Navegação rápida
+alias financas='cd ~/Documents/financas'
+alias fin='cd ~/Documents/financas'
+
+# Comandos rápidos
+alias fin-start='cd ~/Documents/financas && make start'
+alias fin-stop='cd ~/Documents/financas && make stop'
+alias fin-restart='cd ~/Documents/financas && make restart'
+alias fin-status='cd ~/Documents/financas && make status'
+alias fin-dev='~/Documents/financas/dev.sh'
+
+# Backend
+alias fin-backend='cd ~/Documents/financas/backend'
+alias fin-be='cd ~/Documents/financas/backend'
+alias fin-migrate='cd ~/Documents/financas && make backend-migrate'
+alias fin-test-be='cd ~/Documents/financas && make backend-test'
+
+# Frontend
+alias fin-frontend='cd ~/Documents/financas/frontend'
+alias fin-fe='cd ~/Documents/financas/frontend'
+alias fin-test-fe='cd ~/Documents/financas && make frontend-test'
+
+# Testes
+alias fin-test='cd ~/Documents/financas && make test'
+
+# Docker
+alias fin-docker-start='cd ~/Documents/financas && make docker-start'
+alias fin-docker-stop='cd ~/Documents/financas && make docker-stop'
+alias fin-docker-logs='cd ~/Documents/financas && make docker-logs'
+
+# Limpeza
+alias fin-clean='cd ~/Documents/financas && make clean'
+
+# ===================================================
+# INSTALAÇÃO:
+# ===================================================
+# 1. Copie este arquivo para sua home:
+#    cp ~/Documents/financas/.aliases ~/.financas-aliases
+#
+# 2. Adicione ao seu ~/.zshrc:
+#    echo 'source ~/.financas-aliases' >> ~/.zshrc
+#
+# 3. Recarregue o shell:
+#    source ~/.zshrc
+#
+# Agora você pode usar os aliases de qualquer lugar!
+# Exemplos:
+#   fin-dev        # Abre VS Code e inicia tudo
+#   fin            # Vai para a pasta
+#   fin-start      # Inicia serviços
+#   fin-status     # Ver status
+# ===================================================

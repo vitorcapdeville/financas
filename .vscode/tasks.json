@@ -1,0 +1,146 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🐘 Docker: Iniciar PostgreSQL",
+      "type": "shell",
+      "command": "docker",
+      "args": ["container", "start", "financas_postgres"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🚀 Backend: Iniciar FastAPI",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "uvicorn", "app.main:app", "--reload"],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^.*$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*(Uvicorn running|INFO).*",
+          "endsPattern": "^.*(Application startup complete).*"
+        }
+      }
+    },
+    {
+      "label": "🎨 Frontend: Iniciar Next.js",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^.*$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*(ready|started).*",
+          "endsPattern": "^.*(compiled successfully|Ready in).*"
+        }
+      }
+    },
+    {
+      "label": "📦 Backend: Aplicar migrações",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "alembic", "upgrade", "head"],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "✅ Backend: Rodar testes",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "pytest", "-v"],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🧪 Frontend: Rodar testes",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test"],
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🚀 STARTUP COMPLETO",
+      "dependsOn": [
+        "🐘 Docker: Iniciar PostgreSQL",
+        "🚀 Backend: Iniciar FastAPI",
+        "🎨 Frontend: Iniciar Next.js"
+      ],
+      "dependsOrder": "sequence",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
