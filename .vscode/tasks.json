@@ -5,16 +5,26 @@
       "label": "🐘 Docker: Iniciar PostgreSQL",
       "type": "shell",
       "command": "docker",
-      "args": ["container", "start", "financas_postgres"],
+      "args": ["container", "start", "-a", "financas_postgres"],
       "group": "build",
+      "isBackground": true,
       "presentation": {
         "echo": true,
         "reveal": "always",
         "focus": true,
-        "panel": "shared",
+        "panel": "dedicated",
         "showReuseMessage": false
       },
-      "problemMatcher": []
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^.*$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*database system was shut down.*",
+          "endsPattern": "^.*database system is ready to accept connections.*"
+        }
+      }
     },
     {
       "label": "🚀 Backend: Iniciar FastAPI",
@@ -47,8 +57,8 @@
     {
       "label": "🎨 Frontend: Iniciar Next.js",
       "type": "shell",
-      "command": "npm",
-      "args": ["run", "dev"],
+      "command": "bash",
+      "args": ["-c", "source ~/.nvm/nvm.sh && nvm use default && npm run dev"],
       "options": {
         "cwd": "${workspaceFolder}/frontend"
       },

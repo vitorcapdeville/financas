@@ -1,4 +1,4 @@
-.PHONY: help start stop restart clean install test lint format docker-start docker-stop backend-start frontend-start
+.PHONY: help start stop restart clean install test lint format docker-start backend-start frontend-start
 
 # Cores para output
 BLUE := \033[36m
@@ -13,19 +13,6 @@ help: ## Mostra esta ajuda
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-20s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 
-# ================================
-# 🚀 STARTUP
-# ================================
-
-start: ## Inicia todos os serviços (Docker + Backend + Frontend)
-	@echo "$(BLUE)🚀 Iniciando todos os serviços...$(NC)"
-	@./scripts/start.sh
-
-stop: ## Para todos os serviços
-	@echo "$(RED)🛑 Parando todos os serviços...$(NC)"
-	@./scripts/stop.sh
-
-restart: stop start ## Reinicia todos os serviços
 
 # ================================
 # 🐳 DOCKER
@@ -33,16 +20,8 @@ restart: stop start ## Reinicia todos os serviços
 
 docker-start: ## Inicia apenas o Docker PostgreSQL
 	@echo "$(BLUE)🐘 Iniciando PostgreSQL...$(NC)"
-	@docker container start financas_postgres
+	@docker container start -a financas_postgres
 	@echo "$(GREEN)✅ PostgreSQL iniciado$(NC)"
-
-docker-stop: ## Para o Docker PostgreSQL
-	@echo "$(RED)🐘 Parando PostgreSQL...$(NC)"
-	@docker container stop financas_postgres
-	@echo "$(GREEN)✅ PostgreSQL parado$(NC)"
-
-docker-logs: ## Mostra logs do PostgreSQL
-	@docker logs -f financas_postgres
 
 # ================================
 # 🔵 BACKEND
