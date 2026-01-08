@@ -4,7 +4,7 @@ Regras de negócio puras, sem dependências de frameworks
 """
 from dataclasses import dataclass, field
 from datetime import date, datetime
-from typing import Optional, List
+from typing import List, Optional
 
 from app.domain.value_objects.tipo_transacao import TipoTransacao
 
@@ -34,6 +34,7 @@ class Transacao:
     # Metadados
     categoria: Optional[str] = None
     origem: str = "manual"  # manual, extrato_bancario, fatura_cartao
+    banco: Optional[str] = None  # btg, nubank, inter, etc.
     observacoes: Optional[str] = None
     
     # Dados de cartão de crédito

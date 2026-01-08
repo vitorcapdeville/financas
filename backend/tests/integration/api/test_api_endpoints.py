@@ -5,10 +5,10 @@ Objetivo: Testar endpoints da API usando TestClient do FastAPI
 Nota: Usa banco de dados em memória (SQLite)
 """
 import pytest
-from fastapi.testclient import TestClient
 from app.main import app
-from sqlmodel import Session, SQLModel, create_engine
+from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
+from sqlmodel import Session, SQLModel, create_engine
 
 
 @pytest.fixture(scope="function")
@@ -108,7 +108,7 @@ class TestTransacoesAPI:
     def test_listar_transacoes_retorna_200(self, client):
         """Testa listagem de transações"""
         # Act
-        response = client.get("/transacoes/")
+        response = client.get("/transacoes")
         
         # Assert
         assert response.status_code == 200
@@ -126,7 +126,7 @@ class TestTransacoesAPI:
         }
         
         # Act
-        response = client.post("/transacoes/", json=transacao_data)
+        response = client.post("/transacoes", json=transacao_data)
         
         # Assert
         assert response.status_code == 201
@@ -160,11 +160,11 @@ class TestConfiguracoesAPI:
     def test_listar_configuracoes_retorna_200(self, client):
         """Testa listagem de configurações"""
         # Arrange - Criar configurações padrão
-        client.post("/configuracoes/", json={"chave": "diaInicioPeriodo", "valor": "1"})
-        client.post("/configuracoes/", json={"chave": "criterio_data_transacao", "valor": "data_transacao"})
+        client.post("/configuracoes", json={"chave": "diaInicioPeriodo", "valor": "1"})
+        client.post("/configuracoes", json={"chave": "criterio_data_transacao", "valor": "data_transacao"})
         
         # Act
-        response = client.get("/configuracoes/")
+        response = client.get("/configuracoes")
         
         # Assert
         assert response.status_code == 200
@@ -176,7 +176,7 @@ class TestConfiguracoesAPI:
     def test_obter_configuracao_existente_retorna_200(self, client):
         """Testa obter configuração específica"""
         # Arrange - Criar configuração
-        client.post("/configuracoes/", json={"chave": "diaInicioPeriodo", "valor": "1"})
+        client.post("/configuracoes", json={"chave": "diaInicioPeriodo", "valor": "1"})
         
         # Act
         response = client.get("/configuracoes/diaInicioPeriodo")

@@ -2,10 +2,11 @@
 SQLModel Models - Camada de Infraestrutura
 Models de persistência usando SQLModel (isolados do domínio)
 """
-from sqlmodel import SQLModel, Field, Relationship
 from datetime import date, datetime
-from typing import Optional, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
+
 from pydantic import field_validator
+from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.infrastructure.database.models.tag_model import TransacaoTagModel
@@ -30,6 +31,7 @@ class TransacaoModel(SQLModel, table=True):
     tipo: str = Field(description="Tipo: entrada ou saida")
     categoria: Optional[str] = Field(default=None, description="Categoria")
     origem: str = Field(default="manual", description="Origem: manual, extrato_bancario, fatura_cartao")
+    banco: Optional[str] = Field(default=None, description="Banco de origem (btg, nubank, inter, etc.)")
     observacoes: Optional[str] = Field(default=None, description="Observações")
     data_fatura: Optional[date] = Field(default=None, description="Data de fatura (cartão)")
     criado_em: datetime = Field(default_factory=datetime.now)

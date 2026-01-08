@@ -1,13 +1,13 @@
 """
 Testes de API para o router de importação
 """
-import pytest
-from fastapi.testclient import TestClient
 from io import BytesIO
 
+import pytest
 from app.main import app
-from sqlmodel import Session, SQLModel, create_engine
+from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
+from sqlmodel import Session, SQLModel, create_engine
 
 
 @pytest.fixture(scope="function")
@@ -46,23 +46,23 @@ def client():
 
 
 class TestImportacaoRouter:
-    """Testes para o router de importação"""
+    """Testes para o router de importação unificado"""
     
     def test_importar_extrato_csv_valido(self, client):
         """Deve importar extrato bancário CSV válido"""
-        # Criar CSV válido
-        csv_content = """data,descricao,valor
-15/01/2024,Salário,5000.00
-16/01/2024,Supermercado,-150.50
-17/01/2024,Restaurante,-80.00"""
+        # Criar CSV válido com coluna origem
+        csv_content = """data,descricao,valor,origem
+15/01/2024,Salário,5000.00,extrato_bancario
+16/01/2024,Supermercado,-150.50,extrato_bancario
+17/01/2024,Restaurante,-80.00,extrato_bancario"""
         
         # Criar arquivo
         arquivo = BytesIO(csv_content.encode('utf-8'))
         
-        # Importar
+        # Importar usando endpoint unificado
         response = client.post(
-            "/importacao/extrato",
-            files={"arquivo": ("extrato.csv", arquivo, "text/csv")}
+            "/importacao",
+            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
         )
         
         assert response.status_code == 200
@@ -73,15 +73,15 @@ class TestImportacaoRouter:
     
     def test_importar_extrato_csv_com_categoria(self, client):
         """Deve importar extrato CSV com categoria"""
-        csv_content = """data,descricao,valor,categoria
-15/01/2024,Salário,5000.00,Renda
-16/01/2024,Supermercado,-150.50,Alimentação"""
+        csv_content = """data,descricao,valor,origem,categoria
+15/01/2024,Salário,5000.00,extrato_bancario,Renda
+16/01/2024,Supermercado,-150.50,extrato_bancario,Alimentação"""
         
         arquivo = BytesIO(csv_content.encode('utf-8'))
         
         response = client.post(
-            "/importacao/extrato",
-            files={"arquivo": ("extrato.csv", arquivo, "text/csv")}
+            "/importacao",
+            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
         )
         
         assert response.status_code == 200
@@ -94,47 +94,47 @@ class TestImportacaoRouter:
         assert any(t["categoria"] == "Alimentação" for t in transacoes)
     
     def test_importar_extrato_csv_vazio(self, client):
-        """Deve importar 0 transações de CSV vazio (comportamento tolerante)"""
-        csv_content = """data,descricao,valor"""
+        """Deve retornar erro para arquivo vazio (sem linhas de dados)"""
+        csv_content = """data,descricao,valor,origem"""
         
         arquivo = BytesIO(csv_content.encode('utf-8'))
         
         response = client.post(
-            "/importacao/extrato",
-            files={"arquivo": ("extrato.csv", arquivo, "text/csv")}
+            "/importacao",
+            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
         )
         
-        assert response.status_code == 200
-        data = response.json()
-        assert data["total_importado"] == 0
+        assert response.status_code == 400
+        assert "nenhuma linha válida" in response.json()["detail"].lower()
     
     def test_importar_extrato_csv_sem_colunas_obrigatorias(self, client):
         """Deve retornar erro se faltar colunas obrigatórias"""
-        # Falta coluna 'valor'
-        csv_content = """data,descricao
-15/01/2024,Compra"""
+        # Falta coluna 'origem'
+        csv_content = """data,descricao,valor
+15/01/2024,Compra,100.00"""
         
         arquivo = BytesIO(csv_content.encode('utf-8'))
         
         response = client.post(
-            "/importacao/extrato",
-            files={"arquivo": ("extrato.csv", arquivo, "text/csv")}
+            "/importacao",
+            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
         )
         
         assert response.status_code == 400
         assert "coluna" in response.json()["detail"].lower()
+        assert "origem" in response.json()["detail"].lower()
     
     def test_importar_extrato_csv_com_data_invalida(self, client):
         """Deve ignorar linhas com data inválida (comportamento tolerante)"""
-        csv_content = """data,descricao,valor
-99/99/9999,Compra Inválida,100.00
-15/01/2024,Compra Válida,50.00"""
+        csv_content = """data,descricao,valor,origem
+99/99/9999,Compra Inválida,100.00,extrato_bancario
+15/01/2024,Compra Válida,50.00,extrato_bancario"""
         
         arquivo = BytesIO(csv_content.encode('utf-8'))
         
         response = client.post(
-            "/importacao/extrato",
-            files={"arquivo": ("extrato.csv", arquivo, "text/csv")}
+            "/importacao",
+            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
         )
         
         # Sistema ignora linha inválida e importa apenas a válida
@@ -144,15 +144,15 @@ class TestImportacaoRouter:
     
     def test_importar_fatura_csv_valida(self, client):
         """Deve importar fatura de cartão CSV válida"""
-        csv_content = """data,descricao,valor
-15/01/2024,Netflix,39.90
-16/01/2024,Uber,25.00
-17/01/2024,iFood,45.50"""
+        csv_content = """data,descricao,valor,origem,data_fatura
+15/01/2024,Netflix,39.90,fatura_cartao,20/01/2024
+16/01/2024,Uber,25.00,fatura_cartao,20/01/2024
+17/01/2024,iFood,45.50,fatura_cartao,20/01/2024"""
         
         arquivo = BytesIO(csv_content.encode('utf-8'))
         
         response = client.post(
-            "/importacao/fatura",
+            "/importacao",
             files={"arquivo": ("fatura.csv", arquivo, "text/csv")}
         )
         
@@ -168,14 +168,14 @@ class TestImportacaoRouter:
     
     def test_importar_fatura_com_valores_negativos(self, client):
         """Deve converter valores negativos para positivos em fatura"""
-        csv_content = """data,descricao,valor
-15/01/2024,Compra,-100.00
-16/01/2024,Serviço,-50.00"""
+        csv_content = """data,descricao,valor,origem,data_fatura
+15/01/2024,Compra,-100.00,fatura_cartao,20/01/2024
+16/01/2024,Serviço,-50.00,fatura_cartao,20/01/2024"""
         
         arquivo = BytesIO(csv_content.encode('utf-8'))
         
         response = client.post(
-            "/importacao/fatura",
+            "/importacao",
             files={"arquivo": ("fatura.csv", arquivo, "text/csv")}
         )
         
@@ -191,14 +191,14 @@ class TestImportacaoRouter:
     
     def test_importar_fatura_com_data_fatura(self, client):
         """Deve importar fatura com data de fechamento"""
-        csv_content = """data,descricao,valor,data_fatura
-15/01/2024,Netflix,39.90,05/02/2024
-16/01/2024,Spotify,19.90,05/02/2024"""
+        csv_content = """data,descricao,valor,origem,data_fatura
+15/01/2024,Netflix,39.90,fatura_cartao,05/02/2024
+16/01/2024,Spotify,19.90,fatura_cartao,05/02/2024"""
         
         arquivo = BytesIO(csv_content.encode('utf-8'))
         
         response = client.post(
-            "/importacao/fatura",
+            "/importacao",
             files={"arquivo": ("fatura.csv", arquivo, "text/csv")}
         )
         
@@ -213,7 +213,7 @@ class TestImportacaoRouter:
         arquivo = BytesIO(content.encode('utf-8'))
         
         response = client.post(
-            "/importacao/extrato",
+            "/importacao",
             files={"arquivo": ("arquivo.txt", arquivo, "text/plain")}
         )
         
@@ -233,13 +233,13 @@ class TestImportacaoRouter:
         })
         
         # Importar extrato com transação que combina com regra
-        csv_content = """data,descricao,valor
-15/01/2024,Salário do mês,5000.00"""
+        csv_content = """data,descricao,valor,origem
+15/01/2024,Salário do mês,5000.00,extrato_bancario"""
         
         arquivo = BytesIO(csv_content.encode('utf-8'))
         
         response = client.post(
-            "/importacao/extrato",
+            "/importacao",
             files={"arquivo": ("extrato.csv", arquivo, "text/csv")}
         )
         
@@ -252,17 +252,70 @@ class TestImportacaoRouter:
     
     def test_importar_extrato_formato_data_alternativo(self, client):
         """Deve aceitar formato de data YYYY-MM-DD"""
-        csv_content = """data,descricao,valor
-2024-01-15,Compra,100.00
-2024-01-16,Venda,200.00"""
+        csv_content = """data,descricao,valor,origem
+2024-01-15,Compra,-100.00,extrato_bancario
+2024-01-16,Venda,200.00,extrato_bancario"""
         
         arquivo = BytesIO(csv_content.encode('utf-8'))
         
         response = client.post(
-            "/importacao/extrato",
+            "/importacao",
             files={"arquivo": ("extrato.csv", arquivo, "text/csv")}
         )
         
         assert response.status_code == 200
         data = response.json()
         assert data["total_importado"] == 2
+    
+    def test_importar_arquivo_misto(self, client):
+        """Deve importar arquivo com extrato e fatura mistos"""
+        csv_content = """data,descricao,valor,origem,data_fatura
+01/01/2024,Salário,5000.00,extrato_bancario,
+02/01/2024,Compra mercado,-150.00,extrato_bancario,
+03/01/2024,Netflix,39.90,fatura_cartao,15/01/2024
+04/01/2024,Uber,25.00,fatura_cartao,15/01/2024"""
+        
+        arquivo = BytesIO(csv_content.encode('utf-8'))
+        
+        response = client.post(
+            "/importacao",
+            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_importado"] == 4
+    
+    def test_importar_fatura_sem_data_fatura_retorna_erro(self, client):
+        """Fatura sem data_fatura é importada normalmente (data_fatura é opcional)"""
+        csv_content = """data,descricao,valor,origem
+15/01/2024,Netflix,39.90,fatura_cartao"""
+        
+        arquivo = BytesIO(csv_content.encode('utf-8'))
+        
+        response = client.post(
+            "/importacao",
+            files={"arquivo": ("fatura.csv", arquivo, "text/csv")}
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_importado"] == 1
+    
+    def test_importar_origem_invalida_retorna_erro(self, client):
+        """Deve retornar erro para origem inválida"""
+        csv_content = """data,descricao,valor,origem
+15/01/2024,Compra,100.00,origem_invalida"""
+        
+        arquivo = BytesIO(csv_content.encode('utf-8'))
+        
+        response = client.post(
+            "/importacao",
+            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
+        )
+        
+        assert response.status_code == 400
+        assert "origem" in response.json()["detail"].lower()
+        assert "fatura_cartao" in response.json()["detail"].lower()
+        assert "extrato_bancario" in response.json()["detail"].lower()
+

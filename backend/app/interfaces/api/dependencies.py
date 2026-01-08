@@ -3,38 +3,34 @@ Dependency Injection - Camada de Interfaces (Presentation)
 Fábrica de dependências para FastAPI
 """
 from typing import Generator
+
 from fastapi import Depends
 from sqlmodel import Session
 
-from app.infrastructure.database.session import get_session
-
-# Repositórios
-from app.infrastructure.database.repositories.transacao_repository import TransacaoRepository
-from app.infrastructure.database.repositories.tag_repository import TagRepository
-from app.infrastructure.database.repositories.configuracao_repository import ConfiguracaoRepository
-from app.infrastructure.database.repositories.regra_repository import RegraRepository
+from app.application.use_cases.aplicar_regra_em_transacao import AplicarRegraEmTransacaoUseCase
+from app.application.use_cases.atualizar_regra import AtualizarRegraUseCase
+from app.application.use_cases.atualizar_tag import AtualizarTagUseCase
+from app.application.use_cases.criar_regra import CriarRegraUseCase
+from app.application.use_cases.criar_tag import CriarTagUseCase
 
 # Casos de Uso
 from app.application.use_cases.criar_transacao import CriarTransacaoUseCase
-from app.application.use_cases.listar_transacoes import ListarTransacoesUseCase
-from app.application.use_cases.aplicar_regras import AplicarRegrasEmTransacaoUseCase
-from app.application.use_cases.aplicar_todas_regras import AplicarTodasRegrasUseCase
-from app.application.use_cases.criar_tag import CriarTagUseCase
-from app.application.use_cases.listar_tags import ListarTagsUseCase
-from app.application.use_cases.atualizar_tag import AtualizarTagUseCase
-from app.application.use_cases.deletar_tag import DeletarTagUseCase
-from app.application.use_cases.criar_regra import CriarRegraUseCase
-from app.application.use_cases.listar_regras import ListarRegrasUseCase
-from app.application.use_cases.atualizar_regra import AtualizarRegraUseCase
+from app.application.use_cases.deletar_configuracao import DeletarConfiguracaoUseCase
 from app.application.use_cases.deletar_regra import DeletarRegraUseCase
-from app.application.use_cases.aplicar_regra_em_transacao import AplicarRegraEmTransacaoUseCase
+from app.application.use_cases.deletar_tag import DeletarTagUseCase
+from app.application.use_cases.listar_configuracoes import ListarConfiguracoesUseCase
+from app.application.use_cases.listar_regras import ListarRegrasUseCase
+from app.application.use_cases.listar_tags import ListarTagsUseCase
+from app.application.use_cases.listar_transacoes import ListarTransacoesUseCase
 from app.application.use_cases.obter_configuracao import ObterConfiguracaoUseCase
 from app.application.use_cases.salvar_configuracao import SalvarConfiguracaoUseCase
-from app.application.use_cases.listar_configuracoes import ListarConfiguracoesUseCase
-from app.application.use_cases.deletar_configuracao import DeletarConfiguracaoUseCase
-from app.application.use_cases.importar_extrato import ImportarExtratoUseCase
-from app.application.use_cases.importar_fatura import ImportarFaturaUseCase
+from app.infrastructure.database.repositories.configuracao_repository import ConfiguracaoRepository
+from app.infrastructure.database.repositories.regra_repository import RegraRepository
+from app.infrastructure.database.repositories.tag_repository import TagRepository
 
+# Repositórios
+from app.infrastructure.database.repositories.transacao_repository import TransacaoRepository
+from app.infrastructure.database.session import get_session
 
 # ===== REPOSITÓRIOS =====
 
@@ -242,22 +238,14 @@ def get_deletar_configuracao_use_case(
 
 # ===== IMPORTAÇÃO =====
 
-def get_importar_extrato_use_case(
+def get_importar_arquivo_use_case(
     transacao_repo: TransacaoRepository = Depends(get_transacao_repository),
     tag_repo: TagRepository = Depends(get_tag_repository),
     regra_repo: RegraRepository = Depends(get_regra_repository)
-) -> ImportarExtratoUseCase:
-    """Fornece caso de uso de importar extrato"""
-    return ImportarExtratoUseCase(transacao_repo, tag_repo, regra_repo)
-
-
-def get_importar_fatura_use_case(
-    transacao_repo: TransacaoRepository = Depends(get_transacao_repository),
-    tag_repo: TagRepository = Depends(get_tag_repository),
-    regra_repo: RegraRepository = Depends(get_regra_repository)
-) -> ImportarFaturaUseCase:
-    """Fornece caso de uso de importar fatura"""
-    return ImportarFaturaUseCase(transacao_repo, tag_repo, regra_repo)
+):
+    """Fornece caso de uso de importar arquivo (ponto de entrada unificado)"""
+    from app.application.use_cases.importar_arquivo import ImportarArquivoUseCase
+    return ImportarArquivoUseCase(transacao_repo, tag_repo, regra_repo)
 
 
 # Você pode adicionar mais factories de casos de uso aqui conforme necessário
