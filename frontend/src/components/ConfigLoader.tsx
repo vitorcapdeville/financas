@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useEffect } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 interface ConfigLoaderProps {
   diaInicioPeriodo: number;
@@ -12,7 +12,10 @@ interface ConfigLoaderProps {
  * Componente responsável por carregar as configurações apenas uma vez
  * e garantir que elas estejam presentes na URL
  */
-export function ConfigLoader({ diaInicioPeriodo, criterioDataTransacao }: ConfigLoaderProps) {
+export function ConfigLoader({
+  diaInicioPeriodo,
+  criterioDataTransacao,
+}: ConfigLoaderProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -21,21 +24,26 @@ export function ConfigLoader({ diaInicioPeriodo, criterioDataTransacao }: Config
     const params = new URLSearchParams(searchParams.toString());
     let needsUpdate = false;
 
-    // Se não tem diaInicio na URL, adiciona o valor do banco
-    if (!params.get('diaInicio')) {
-      params.set('diaInicio', diaInicioPeriodo.toString());
+    // Se diaInicio não existe ou é diferente do configurado, atualiza
+    const diaInicioAtual = params.get("diaInicio");
+    const diaInicioBanco = diaInicioPeriodo.toString();
+    if (!diaInicioAtual || diaInicioAtual !== diaInicioBanco) {
+      params.set("diaInicio", diaInicioBanco);
       needsUpdate = true;
     }
 
-    // Se não tem criterio na URL, adiciona o valor do banco
-    if (!params.get('criterio')) {
-      params.set('criterio', criterioDataTransacao);
+    // Se criterio não existe ou é diferente do configurado, atualiza
+    const criterioAtual = params.get("criterio");
+    if (!criterioAtual || criterioAtual !== criterioDataTransacao) {
+      params.set("criterio", criterioDataTransacao);
       needsUpdate = true;
     }
 
     // Se precisa atualizar, faz replace na URL com pathname correto
     if (needsUpdate) {
-      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+      const newUrl = params.toString()
+        ? `${pathname}?${params.toString()}`
+        : pathname;
       router.replace(newUrl, { scroll: false });
     }
   }, [pathname, searchParams, router, diaInicioPeriodo, criterioDataTransacao]);
