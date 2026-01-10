@@ -1,5 +1,13 @@
-import api from '@/lib/api';
-import { Transacao, TransacaoCreate, TransacaoUpdate, ResumoMensal, Tag, TagCreate, TagUpdate } from '@/types';
+import api from "@/lib/api";
+import {
+  Transacao,
+  TransacaoCreate,
+  TransacaoUpdate,
+  ResumoMensal,
+  Tag,
+  TagCreate,
+  TagUpdate,
+} from "@/types";
 
 export const transacoesService = {
   async listar(params?: {
@@ -11,7 +19,7 @@ export const transacoesService = {
     tipo?: string;
     tags?: string; // IDs separados por vírgula
   }): Promise<Transacao[]> {
-    const { data } = await api.get('/transacoes', { params });
+    const { data } = await api.get("/transacoes", { params });
     return data;
   },
 
@@ -21,7 +29,7 @@ export const transacoesService = {
   },
 
   async criar(transacao: TransacaoCreate): Promise<Transacao> {
-    const { data } = await api.post('/transacoes', transacao);
+    const { data } = await api.post("/transacoes", transacao);
     return data;
   },
 
@@ -36,7 +44,7 @@ export const transacoesService = {
   },
 
   async listarCategorias(): Promise<string[]> {
-    const { data } = await api.get('/transacoes/categorias');
+    const { data } = await api.get("/transacoes/categorias");
     return data;
   },
 
@@ -54,10 +62,10 @@ export const transacoesService = {
       params.mes = mes;
       params.ano = ano;
     }
-    const { data } = await api.get('/transacoes/resumo/mensal', { params });
+    const { data } = await api.get("/transacoes/resumo/mensal", { params });
     return data;
   },
-  
+
   async listarTags(transacaoId: number): Promise<Tag[]> {
     const { data } = await api.get(`/transacoes/${transacaoId}/tags`);
     return data;
@@ -73,20 +81,17 @@ export const transacoesService = {
 };
 
 export const importacaoService = {
-  async importarExtrato(arquivo: File): Promise<Transacao[]> {
+  async importarArquivo(
+    arquivo: File
+  ): Promise<{
+    total_importado: number;
+    transacoes_ids: number[];
+    mensagem: string;
+  }> {
     const formData = new FormData();
-    formData.append('arquivo', arquivo);
-    const { data } = await api.post('/importacao/extrato', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return data;
-  },
-
-  async importarFatura(arquivo: File): Promise<Transacao[]> {
-    const formData = new FormData();
-    formData.append('arquivo', arquivo);
-    const { data } = await api.post('/importacao/fatura', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    formData.append("arquivo", arquivo);
+    const { data } = await api.post("/importacao", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return data;
   },
@@ -98,15 +103,18 @@ export const configuracoesService = {
     return data;
   },
 
-  async salvar(chave: string, valor: string): Promise<{ chave: string; valor: string }> {
-    const { data } = await api.post('/configuracoes/', { chave, valor });
+  async salvar(
+    chave: string,
+    valor: string
+  ): Promise<{ chave: string; valor: string }> {
+    const { data } = await api.post("/configuracoes/", { chave, valor });
     return data;
   },
 };
 
 export const tagsService = {
   async listar(): Promise<Tag[]> {
-    const { data } = await api.get('/tags');
+    const { data } = await api.get("/tags");
     return data;
   },
 
@@ -116,7 +124,7 @@ export const tagsService = {
   },
 
   async criar(tag: TagCreate): Promise<Tag> {
-    const { data } = await api.post('/tags', tag);
+    const { data } = await api.post("/tags", tag);
     return data;
   },
 
