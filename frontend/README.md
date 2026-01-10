@@ -1,26 +1,86 @@
-# Frontend de Finanças Pessoais
+# 🎨 Frontend - Financial Serenity Design
 
-Interface web para gerenciamento de finanças pessoais, construída com Next.js, TypeScript e Tailwind CSS.
+Sistema de gerenciamento de finanças pessoais com design premium e elegante.
 
-## Configuração
+## 🚀 Quick Start
 
-1. Instale as dependências:
 ```bash
+# Instalar dependências
 npm install
+
+# Desenvolvimento
+npm run dev          # http://localhost:3000
+
+# Build
+npm run build
+
+# Testes
+npm run test
 ```
 
-2. Configure as variáveis de ambiente:
-```bash
-cp .env.example .env
-# Edite o .env se necessário
+## 📖 Documentação Completa
+
+- **[Design System](./DESIGN_SYSTEM.md)** - Guia completo de cores, tipografia, componentes e animações
+- **[Showcase de Cores](./src/components/ColorPaletteShowcase.tsx)** - Componente visual da paleta
+
+## 🎨 Design Philosophy: Financial Serenity
+
+Sistema de design premium que combina:
+
+- ✨ **Minimalismo refinado** - Sem elementos desnecessários
+- 🏛️ **Estabilidade visual** - Inspirado em apps bancários premium
+- 📊 **Clareza de dados** - Hierarquia forte e tipografia financeira
+- 🌊 **Micro-interações** - Animações suaves e elegantes
+
+### Cores Principais
+
+```css
+/* Emerald (Branding) */
+#0f3d3e  /* Dark - Títulos */
+#156064  /* Default - CTAs */
+
+/* Bronze/Gold (Acentos) */
+#b8860b  /* Bronze - Decorações */
+#d4af37  /* Gold - Destaques */
+
+/* Semânticos */
+#2d8659  /* Success - Entradas */
+#c44536  /* Error - Saídas */
+
+/* Neutros */
+#faf8f5  /* Cream - Background */
+#2d2d2d  /* Charcoal - Texto */
 ```
 
-3. Execute em modo de desenvolvimento:
-```bash
-npm run dev
+### Tipografia
+
+- **DM Serif Display** - Títulos elegantes
+- **DM Sans** - Corpo de texto
+- Fonte tabular para valores financeiros
+
+## 📦 Componentes Base
+
+```tsx
+/* Card Premium */
+<div className="card-premium p-8">
+
+/* Botão Primário */
+<button style={{
+  background: 'linear-gradient(135deg, #0f3d3e, #156064)'
+}}>
+
+/* Animações */
+<div className="animate-fade-in-up delay-200">
 ```
 
-4. Acesse: http://localhost:3000
+## 🛠️ Tech Stack
+
+- **Next.js 16** - App Router, Server Components
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Utility-first styling
+- **Axios** - HTTP client
+- **React Hot Toast** - Notifications
+- **date-fns** - Date utilities
 
 ## Estrutura
 
