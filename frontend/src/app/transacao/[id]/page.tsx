@@ -1,4 +1,4 @@
-import { transacoesServerService } from "@/services/api.server";
+import { transacoesService } from "@/services/api.service";
 import { tagsServerService } from "@/services/tags.server";
 import { formatarData, formatarMoeda } from "@/utils/format";
 import { Tag } from "@/types";
@@ -36,7 +36,7 @@ export default async function TransacaoPage({
   // Busca transação no servidor
   let transacao;
   try {
-    transacao = await transacoesServerService.obter(id);
+    transacao = await transacoesService.obter(id);
   } catch (error) {
     console.error("Erro ao carregar transação:", error);
     transacao = null;

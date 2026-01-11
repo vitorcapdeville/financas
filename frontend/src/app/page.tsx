@@ -1,4 +1,4 @@
-import { transacoesServerService } from "@/services/api.server";
+import { transacoesService } from "@/services/api.service";
 import { formatarMoeda } from "@/utils/format";
 import {
   calcularPeriodoCustomizado,
@@ -41,7 +41,7 @@ export default async function Home(props: HomeProps) {
   // Busca dados no servidor
   let resumo = null;
   try {
-    resumo = await transacoesServerService.resumoMensal(
+    resumo = await transacoesService.resumoMensal(
       undefined,
       undefined,
       data_inicio,

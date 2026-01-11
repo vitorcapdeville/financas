@@ -2,55 +2,61 @@
  * Testes de Integração - Fluxo de Transações
  */
 
-import axios from 'axios';
+import { transacoesService } from "@/services/api.service";
 
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+// Mock do fetch global
+global.fetch = jest.fn();
 
-describe('Fluxo de Integração - Transações', () => {
+describe("Fluxo de Integração - Transações", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('Criação e Listagem', () => {
-    it('deve criar nova transação e listar', async () => {
+  describe("Criação e Listagem", () => {
+    it("deve criar nova transação e listar", async () => {
       const novaTransacao = {
-        data: '2024-06-20',
-        descricao: 'Restaurante',
-        valor: 75.00,
-        tipo: 'saida',
-        categoria: 'Alimentação',
+        data: "2024-06-20",
+        descricao: "Restaurante",
+        valor: 75.0,
+        tipo: "saida",
+        categoria: "Alimentação",
+        origem: "MANUAL",
       };
 
       const mockResposta = { id: 3, ...novaTransacao, tags: [] };
-      mockedAxios.post.mockResolvedValueOnce({ data: mockResposta });
 
-      const resultado = await mockedAxios.post('/transacoes', novaTransacao);
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResposta,
+      });
 
-      expect(resultado.data).toMatchObject(novaTransacao);
-      expect(resultado.data.id).toBe(3);
+      const resultado = await transacoesService.criar(novaTransacao);
+
+      expect(resultado).toMatchObject(novaTransacao);
+      expect(resultado.id).toBe(3);
     });
   });
 
-  describe('Resumo Mensal', () => {
-    it('deve calcular resumo mensal corretamente', async () => {
+  describe("Resumo Mensal", () => {
+    it("deve calcular resumo mensal corretamente", async () => {
       const mockResumo = {
         mes: 6,
         ano: 2024,
-        total_entradas: 5000.00,
-        total_saidas: 2500.00,
-        saldo: 2500.00,
+        total_entradas: 5000.0,
+        total_saidas: 2500.0,
+        saldo: 2500.0,
       };
 
-      mockedAxios.get.mockResolvedValueOnce({ data: mockResumo });
-
-      const resultado = await mockedAxios.get('/transacoes/resumo/mensal', {
-        params: { mes: 6, ano: 2024 },
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResumo,
       });
 
-      expect(resultado.data.total_entradas).toBe(5000.00);
-      expect(resultado.data.total_saidas).toBe(2500.00);
-      expect(resultado.data.saldo).toBe(2500.00);
+      const resultado = await transacoesService.resumoMensal(6, 2024);
+
+      expect(resultado.total_entradas).toBe(5000.0);
+      expect(resultado.total_saidas).toBe(2500.0);
+      expect(resultado.saldo).toBe(2500.0);
     });
   });
 });

@@ -1,4 +1,4 @@
-import { transacoesServerService } from "@/services/api.server";
+import { transacoesService } from "@/services/api.service";
 import { formatarData, formatarMoeda } from "@/utils/format";
 import {
   calcularPeriodoCustomizado,
@@ -49,7 +49,7 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
   // Busca transações do período atual
   let transacoes: import("@/types").Transacao[];
   try {
-    transacoes = await transacoesServerService.listar({
+    transacoes = await transacoesService.listar({
       data_inicio,
       data_fim,
       categoria: categoria === "Sem categoria" ? undefined : categoria,
@@ -79,7 +79,7 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
       diaInicio
     );
     try {
-      const transacoesMes = await transacoesServerService.listar({
+      const transacoesMes = await transacoesService.listar({
         data_inicio: periodoAnterior.data_inicio,
         data_fim: periodoAnterior.data_fim,
         categoria: categoria === "Sem categoria" ? undefined : categoria,

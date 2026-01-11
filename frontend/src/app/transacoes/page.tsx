@@ -1,4 +1,4 @@
-import { transacoesServerService } from "@/services/api.server";
+import { transacoesService } from "@/services/api.service";
 import { formatarData, formatarMoeda } from "@/utils/format";
 import {
   calcularPeriodoCustomizado,
@@ -42,7 +42,7 @@ export default async function TransacoesPage(props: TransacoesPageProps) {
   // Busca transações no servidor
   let transacoes: import("@/types").Transacao[];
   try {
-    transacoes = await transacoesServerService.listar({
+    transacoes = await transacoesService.listar({
       data_inicio,
       data_fim,
       tags: searchParams.tags,

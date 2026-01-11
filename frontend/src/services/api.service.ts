@@ -1,4 +1,3 @@
-import api from "@/lib/api";
 import {
   Transacao,
   TransacaoCreate,
@@ -9,6 +8,21 @@ import {
   TagUpdate,
 } from "@/types";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+// Helper para lidar com erros de fetch
+async function handleFetch<T>(url: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(url, options);
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`HTTP ${res.status}: ${errorText || res.statusText}`);
+  }
+
+  return res.json();
+}
+
+// Serviço de transações
 export const transacoesService = {
   async listar(params?: {
     mes?: number;
@@ -17,66 +31,113 @@ export const transacoesService = {
     data_fim?: string;
     categoria?: string;
     tipo?: string;
-    tags?: string; // IDs separados por vírgula
+    tags?: string;
+    sem_tags?: boolean;
+    criterio_data_transacao?: string;
   }): Promise<Transacao[]> {
-    const { data } = await api.get("/transacoes", { params });
-    return data;
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, value.toString());
+        }
+      });
+    }
+
+    const url = `${API_URL}/transacoes?${searchParams.toString()}`;
+    return handleFetch<Transacao[]>(url, { cache: "no-store" });
   },
 
   async obter(id: number): Promise<Transacao> {
-    const { data } = await api.get(`/transacoes/${id}`);
-    return data;
+    return handleFetch<Transacao>(`${API_URL}/transacoes/${id}`, {
+      cache: "no-store",
+    });
   },
 
   async criar(transacao: TransacaoCreate): Promise<Transacao> {
-    const { data } = await api.post("/transacoes", transacao);
-    return data;
+    return handleFetch<Transacao>(`${API_URL}/transacoes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(transacao),
+      cache: "no-store",
+    });
   },
 
   async atualizar(id: number, transacao: TransacaoUpdate): Promise<Transacao> {
-    const { data } = await api.patch(`/transacoes/${id}`, transacao);
-    return data;
+    return handleFetch<Transacao>(`${API_URL}/transacoes/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(transacao),
+      cache: "no-store",
+    });
   },
 
   async restaurarValorOriginal(id: number): Promise<Transacao> {
-    const { data } = await api.post(`/transacoes/${id}/restaurar-valor`);
-    return data;
+    return handleFetch<Transacao>(`${API_URL}/transacoes/${id}/restaurar-valor`, {
+      method: "POST",
+      cache: "no-store",
+    });
   },
 
   async listarCategorias(): Promise<string[]> {
-    const { data } = await api.get("/transacoes/categorias");
-    return data;
+    return handleFetch<string[]>(`${API_URL}/transacoes/categorias`, {
+      cache: "no-store",
+    });
   },
 
   async resumoMensal(
     mes?: number,
     ano?: number,
     data_inicio?: string,
-    data_fim?: string
+    data_fim?: string,
+    tags?: string,
+    sem_tags?: boolean,
+    criterio_data_transacao?: string
   ): Promise<ResumoMensal> {
-    const params: any = {};
+    const searchParams = new URLSearchParams();
+
     if (data_inicio && data_fim) {
-      params.data_inicio = data_inicio;
-      params.data_fim = data_fim;
+      searchParams.append("data_inicio", data_inicio);
+      searchParams.append("data_fim", data_fim);
     } else if (mes && ano) {
-      params.mes = mes;
-      params.ano = ano;
+      searchParams.append("mes", mes.toString());
+      searchParams.append("ano", ano.toString());
     }
-    const { data } = await api.get("/transacoes/resumo/mensal", { params });
-    return data;
+
+    if (tags) {
+      searchParams.append("tags", tags);
+    }
+
+    if (sem_tags) {
+      searchParams.append("sem_tags", "true");
+    }
+
+    if (criterio_data_transacao) {
+      searchParams.append("criterio_data_transacao", criterio_data_transacao);
+    }
+
+    const url = `${API_URL}/transacoes/resumo/mensal?${searchParams.toString()}`;
+    return handleFetch<ResumoMensal>(url, { cache: "no-store" });
   },
 
   async listarTags(transacaoId: number): Promise<Tag[]> {
-    const { data } = await api.get(`/transacoes/${transacaoId}/tags`);
-    return data;
+    return handleFetch<Tag[]>(`${API_URL}/transacoes/${transacaoId}/tags`, {
+      cache: "no-store",
+    });
   },
 
   async adicionarTag(transacaoId: number, tagId: number): Promise<void> {
-    await api.post(`/transacoes/${transacaoId}/tags/${tagId}`);
+    await handleFetch<void>(`${API_URL}/transacoes/${transacaoId}/tags/${tagId}`, {
+      method: "POST",
+      cache: "no-store",
+    });
   },
 
   async removerTag(transacaoId: number, tagId: number): Promise<void> {
-    await api.delete(`/transacoes/${transacaoId}/tags/${tagId}`);
+    await handleFetch<void>(`${API_URL}/transacoes/${transacaoId}/tags/${tagId}`, {
+      method: "DELETE",
+      cache: "no-store",
+    });
   },
 };
 
@@ -90,50 +151,77 @@ export const importacaoService = {
   }> {
     const formData = new FormData();
     formData.append("arquivo", arquivo);
-    const { data } = await api.post("/importacao", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+
+    const res = await fetch(`${API_URL}/importacao`, {
+      method: "POST",
+      body: formData,
+      cache: "no-store",
     });
-    return data;
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errorText || res.statusText}`);
+    }
+
+    return res.json();
   },
 };
 
 export const configuracoesService = {
   async obter(chave: string): Promise<{ chave: string; valor: string | null }> {
-    const { data } = await api.get(`/configuracoes/${chave}`);
-    return data;
+    return handleFetch<{ chave: string; valor: string | null }>(
+      `${API_URL}/configuracoes/${chave}`,
+      { cache: "no-store" }
+    );
   },
 
   async salvar(
     chave: string,
     valor: string
   ): Promise<{ chave: string; valor: string }> {
-    const { data } = await api.post("/configuracoes/", { chave, valor });
-    return data;
+    return handleFetch<{ chave: string; valor: string }>(
+      `${API_URL}/configuracoes/`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chave, valor }),
+        cache: "no-store",
+      }
+    );
   },
 };
 
 export const tagsService = {
   async listar(): Promise<Tag[]> {
-    const { data } = await api.get("/tags");
-    return data;
+    return handleFetch<Tag[]>(`${API_URL}/tags`, { cache: "no-store" });
   },
 
   async obter(id: number): Promise<Tag> {
-    const { data } = await api.get(`/tags/${id}`);
-    return data;
+    return handleFetch<Tag>(`${API_URL}/tags/${id}`, { cache: "no-store" });
   },
 
   async criar(tag: TagCreate): Promise<Tag> {
-    const { data } = await api.post("/tags", tag);
-    return data;
+    return handleFetch<Tag>(`${API_URL}/tags`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(tag),
+      cache: "no-store",
+    });
   },
 
   async atualizar(id: number, tag: TagUpdate): Promise<Tag> {
-    const { data } = await api.patch(`/tags/${id}`, tag);
-    return data;
+    return handleFetch<Tag>(`${API_URL}/tags/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(tag),
+      cache: "no-store",
+    });
   },
 
   async deletar(id: number): Promise<void> {
-    await api.delete(`/tags/${id}`);
+    await handleFetch<void>(`${API_URL}/tags/${id}`, {
+      method: "DELETE",
+      cache: "no-store",
+    });
   },
 };
