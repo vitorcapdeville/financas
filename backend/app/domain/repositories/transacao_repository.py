@@ -54,6 +54,7 @@ class ITransacaoRepository(ABC):
         categoria: Optional[str] = None,
         tipo: Optional[TipoTransacao] = None,
         tag_ids: Optional[List[int]] = None,
+        sem_tags: bool = False,
         criterio_data: str = "data_transacao"
     ) -> List[Transacao]:
         """
@@ -67,6 +68,7 @@ class ITransacaoRepository(ABC):
             categoria: Categoria para filtrar
             tipo: Tipo de transação (entrada/saída)
             tag_ids: Lista de IDs de tags (operação OR)
+            sem_tags: Se True, inclui transações sem tags (lógica OR com tag_ids)
             criterio_data: "data_transacao" ou "data_fatura"
             
         Returns:

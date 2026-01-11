@@ -1,6 +1,11 @@
-import { Transacao, TransacaoCreate, TransacaoUpdate, ResumoMensal } from '@/types';
+import {
+  Transacao,
+  TransacaoCreate,
+  TransacaoUpdate,
+  ResumoMensal,
+} from "@/types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // Serviços server-side usando fetch nativo (para Server Components)
 export const transacoesServerService = {
@@ -12,6 +17,7 @@ export const transacoesServerService = {
     categoria?: string;
     tipo?: string;
     tags?: string;
+    sem_tags?: boolean;
     criterio_data_transacao?: string;
   }): Promise<Transacao[]> {
     const searchParams = new URLSearchParams();
@@ -22,24 +28,26 @@ export const transacoesServerService = {
         }
       });
     }
-    
+
     const url = `${API_URL}/transacoes?${searchParams.toString()}`;
-    const res = await fetch(url, { cache: 'no-store' });
-    
+    const res = await fetch(url, { cache: "no-store" });
+
     if (!res.ok) {
       throw new Error(`Failed to fetch: ${res.statusText}`);
     }
-    
+
     return res.json();
   },
 
   async obter(id: number): Promise<Transacao> {
-    const res = await fetch(`${API_URL}/transacoes/${id}`, { cache: 'no-store' });
-    
+    const res = await fetch(`${API_URL}/transacoes/${id}`, {
+      cache: "no-store",
+    });
+
     if (!res.ok) {
       throw new Error(`Failed to fetch: ${res.statusText}`);
     }
-    
+
     return res.json();
   },
 
@@ -49,33 +57,38 @@ export const transacoesServerService = {
     data_inicio?: string,
     data_fim?: string,
     tags?: string,
+    sem_tags?: boolean,
     criterio_data_transacao?: string
   ): Promise<ResumoMensal> {
     const searchParams = new URLSearchParams();
-    
+
     if (data_inicio && data_fim) {
-      searchParams.append('data_inicio', data_inicio);
-      searchParams.append('data_fim', data_fim);
+      searchParams.append("data_inicio", data_inicio);
+      searchParams.append("data_fim", data_fim);
     } else if (mes && ano) {
-      searchParams.append('mes', mes.toString());
-      searchParams.append('ano', ano.toString());
+      searchParams.append("mes", mes.toString());
+      searchParams.append("ano", ano.toString());
     }
-    
+
     if (tags) {
-      searchParams.append('tags', tags);
+      searchParams.append("tags", tags);
     }
-    
+
+    if (sem_tags) {
+      searchParams.append("sem_tags", "true");
+    }
+
     if (criterio_data_transacao) {
-      searchParams.append('criterio_data_transacao', criterio_data_transacao);
+      searchParams.append("criterio_data_transacao", criterio_data_transacao);
     }
-    
+
     const url = `${API_URL}/transacoes/resumo/mensal?${searchParams.toString()}`;
-    const res = await fetch(url, { cache: 'no-store' });
-    
+    const res = await fetch(url, { cache: "no-store" });
+
     if (!res.ok) {
       throw new Error(`Failed to fetch: ${res.statusText}`);
     }
-    
+
     return res.json();
   },
 };

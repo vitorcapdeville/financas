@@ -2,51 +2,50 @@
 Router de Transações - Refatorado com Clean Architecture
 Camada de Apresentação (Interfaces)
 """
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from typing import List, Optional
 from datetime import date
+from typing import List, Optional
 
-from app.interfaces.api.schemas.request_response import (
-    TransacaoCreateRequest,
-    TransacaoUpdateRequest,
-    TransacaoResponse,
-    ResumoMensalResponse,
-    TagResponse
-)
-from app.interfaces.api.dependencies import (
-    get_criar_transacao_use_case,
-    get_listar_transacoes_use_case,
-    get_atualizar_transacao_use_case,
-    get_obter_resumo_mensal_use_case,
-    get_listar_categorias_use_case,
-    get_restaurar_valor_original_use_case,
-    get_adicionar_tag_transacao_use_case,
-    get_remover_tag_transacao_use_case,
-    get_listar_tags_transacao_use_case,
-    get_transacao_repository
-)
-from app.application.use_cases.criar_transacao import CriarTransacaoUseCase
-from app.application.use_cases.listar_transacoes import ListarTransacoesUseCase
-from app.application.use_cases.atualizar_transacao import AtualizarTransacaoUseCase
-from app.application.use_cases.obter_resumo_mensal import ObterResumoMensalUseCase
-from app.application.use_cases.listar_categorias import ListarCategoriasUseCase
-from app.application.use_cases.restaurar_valor_original import RestaurarValorOriginalUseCase
-from app.application.use_cases.adicionar_tag_transacao import AdicionarTagTransacaoUseCase
-from app.application.use_cases.remover_tag_transacao import RemoverTagTransacaoUseCase
-from app.application.use_cases.listar_tags_transacao import ListarTagsTransacaoUseCase
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
 from app.application.dto.transacao_dto import (
-    CriarTransacaoDTO,
     AtualizarTransacaoDTO,
+    CriarTransacaoDTO,
     FiltrosTransacaoDTO,
-    TransacaoDTO
+    TransacaoDTO,
 )
-from app.application.exceptions.application_exceptions import (
-    ValidationException,
-    EntityNotFoundException
-)
+from app.application.exceptions.application_exceptions import EntityNotFoundException, ValidationException
+from app.application.use_cases.adicionar_tag_transacao import AdicionarTagTransacaoUseCase
+from app.application.use_cases.atualizar_transacao import AtualizarTransacaoUseCase
+from app.application.use_cases.criar_transacao import CriarTransacaoUseCase
+from app.application.use_cases.listar_categorias import ListarCategoriasUseCase
+from app.application.use_cases.listar_tags_transacao import ListarTagsTransacaoUseCase
+from app.application.use_cases.listar_transacoes import ListarTransacoesUseCase
+from app.application.use_cases.obter_resumo_mensal import ObterResumoMensalUseCase
+from app.application.use_cases.obter_transacao import ObterTransacaoUseCase
+from app.application.use_cases.remover_tag_transacao import RemoverTagTransacaoUseCase
+from app.application.use_cases.restaurar_valor_original import RestaurarValorOriginalUseCase
 from app.domain.value_objects.tipo_transacao import TipoTransacao
 from app.infrastructure.database.repositories.transacao_repository import TransacaoRepository
-
+from app.interfaces.api.dependencies import (
+    get_adicionar_tag_transacao_use_case,
+    get_atualizar_transacao_use_case,
+    get_criar_transacao_use_case,
+    get_listar_categorias_use_case,
+    get_listar_tags_transacao_use_case,
+    get_listar_transacoes_use_case,
+    get_obter_resumo_mensal_use_case,
+    get_obter_transacao_use_case,
+    get_remover_tag_transacao_use_case,
+    get_restaurar_valor_original_use_case,
+    get_transacao_repository,
+)
+from app.interfaces.api.schemas.request_response import (
+    ResumoMensalResponse,
+    TagResponse,
+    TransacaoCreateRequest,
+    TransacaoResponse,
+    TransacaoUpdateRequest,
+)
 
 router = APIRouter(prefix="/transacoes", tags=["Transações"])
 
@@ -99,12 +98,16 @@ def listar_transacoes(
     categoria: Optional[str] = None,
     tipo: Optional[str] = None,
     tags: Optional[str] = Query(None, description="IDs separados por vírgula"),
+    sem_tags: bool = Query(False, description="Filtrar apenas transações sem tags"),
     use_case: ListarTransacoesUseCase = Depends(get_listar_transacoes_use_case)
 ):
     """
     Lista transações com filtros opcionais.
     
-    Exemplo de listagem com Clean Architecture.
+    Filtro de tags (OR lógico):
+    - tags=1,2: Transações que possuem tag 1 OU tag 2
+    - sem_tags=true: Transações sem nenhuma tag
+    - tags=1&sem_tags=true: Transações com tag 1 OU sem tags
     """
     try:
         # Parse de tags
@@ -125,7 +128,8 @@ def listar_transacoes(
             data_fim=data_fim,
             categoria=categoria,
             tipo=tipo_enum,
-            tag_ids=tag_ids
+            tag_ids=tag_ids,
+            sem_tags=sem_tags
         )
         
         # Executa caso de uso
@@ -161,6 +165,7 @@ def obter_resumo_mensal(
     data_inicio: Optional[date] = None,
     data_fim: Optional[date] = None,
     tags: Optional[str] = Query(None, description="IDs separados por vírgula"),
+    sem_tags: bool = Query(False, description="Filtrar apenas transações sem tags"),
     use_case: ObterResumoMensalUseCase = Depends(get_obter_resumo_mensal_use_case)
 ):
     """
@@ -168,6 +173,11 @@ def obter_resumo_mensal(
     
     Usado pelo dashboard principal.
     O filtro de data respeita a configuração 'criterio_data_transacao'.
+    
+    Filtro de tags (OR lógico):
+    - tags=1,2: Transações que possuem tag 1 OU tag 2
+    - sem_tags=true: Transações sem nenhuma tag
+    - tags=1&sem_tags=true: Transações com tag 1 OU sem tags
     """
     try:
         # Parse de tags
@@ -181,7 +191,8 @@ def obter_resumo_mensal(
             ano=ano,
             data_inicio=data_inicio,
             data_fim=data_fim,
-            tag_ids=tag_ids
+            tag_ids=tag_ids,
+            sem_tags=sem_tags
         )
         
         # Converter DTO → Response
@@ -202,37 +213,24 @@ def obter_resumo_mensal(
 @router.get("/{transacao_id}", response_model=TransacaoResponse)
 def buscar_transacao(
     transacao_id: int,
-    repository: TransacaoRepository = Depends(get_transacao_repository)
+    use_case: ObterTransacaoUseCase = Depends(get_obter_transacao_use_case)
 ):
     """
-    Busca uma transação por ID.
+    Busca uma transação por ID com tags completas.
     
-    Nota: Para operações CRUD simples, podemos usar o repositório diretamente.
-    Para lógica de negócio complexa, crie um caso de uso.
+    Usa Use Case para respeitar Clean Architecture.
     """
-    transacao = repository.buscar_por_id(transacao_id)
-    if not transacao:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Transacao {transacao_id} não encontrada"
-        )
-    
-    # Converte entidade → Response
-    return TransacaoResponse(
-        id=transacao.id,
-        data=transacao.data,
-        descricao=transacao.descricao,
-        valor=transacao.valor,
-        valor_original=transacao.valor_original,
-        tipo=transacao.tipo.value,
-        categoria=transacao.categoria,
-        origem=transacao.origem,
-        observacoes=transacao.observacoes,
-        data_fatura=transacao.data_fatura,
-        criado_em=transacao.criado_em,
-        atualizado_em=transacao.atualizado_em,
-        tag_ids=transacao.tag_ids
-    )
+    try:
+        # Executa Use Case
+        dto = use_case.execute(transacao_id)
+        
+        # Converte DTO → Response
+        return _dto_to_response(dto)
+        
+    except EntityNotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.patch("/{transacao_id}", response_model=TransacaoResponse)
@@ -380,6 +378,19 @@ def listar_tags_transacao(
 
 def _dto_to_response(dto: TransacaoDTO) -> TransacaoResponse:
     """Converte DTO de aplicação → Response de apresentação"""
+    # Converte TagDTOs → TagResponses
+    tags_response = [
+        TagResponse(
+            id=tag.id,
+            nome=tag.nome,
+            cor=tag.cor,
+            descricao=tag.descricao,
+            criado_em=tag.criado_em,
+            atualizado_em=tag.atualizado_em
+        )
+        for tag in dto.tags
+    ]
+    
     return TransacaoResponse(
         id=dto.id,
         data=dto.data,
@@ -393,5 +404,6 @@ def _dto_to_response(dto: TransacaoDTO) -> TransacaoResponse:
         data_fatura=dto.data_fatura,
         criado_em=dto.criado_em,
         atualizado_em=dto.atualizado_em,
-        tag_ids=dto.tag_ids
+        tag_ids=dto.tag_ids,
+        tags=tags_response
     )

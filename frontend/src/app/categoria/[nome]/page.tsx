@@ -18,6 +18,7 @@ interface CategoriaPageProps {
     diaInicio?: string;
     criterio?: string;
     tags?: string;
+    sem_tags?: string;
   }>;
 }
 
@@ -35,12 +36,13 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
     diaInicio
   );
 
-  // Constrói query string preservando período, diaInicio, criterio, tags e origem
+  // Constrói query string preservando período, diaInicio, criterio, tags, sem_tags e origem
   const queryParams = new URLSearchParams();
   if (periodo) queryParams.set("periodo", periodo);
   if (diaInicio) queryParams.set("diaInicio", diaInicio.toString());
   if (criterio) queryParams.set("criterio", criterio);
   if (searchParams.tags) queryParams.set("tags", searchParams.tags);
+  if (searchParams.sem_tags) queryParams.set("sem_tags", searchParams.sem_tags);
   queryParams.set("origem", `categoria:${categoria}`);
   const queryString = queryParams.toString();
 
@@ -53,6 +55,7 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
       categoria: categoria === "Sem categoria" ? undefined : categoria,
       tipo: tipo || undefined,
       tags: searchParams.tags,
+      sem_tags: searchParams.sem_tags === "true",
       criterio_data_transacao: criterio,
     });
   } catch (error) {

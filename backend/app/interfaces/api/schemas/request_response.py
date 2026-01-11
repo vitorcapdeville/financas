@@ -2,10 +2,10 @@
 Schemas Pydantic para API - Camada de Apresentação
 Modelos de request/response para FastAPI
 """
-from pydantic import BaseModel, Field
 from datetime import date, datetime
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
+from pydantic import BaseModel, Field
 
 # ===== TRANSAÇÃO =====
 
@@ -45,6 +45,7 @@ class TransacaoResponse(BaseModel):
     criado_em: datetime
     atualizado_em: datetime
     tag_ids: List[int] = []
+    tags: List["TagResponse"] = []  # Objetos Tag completos
     
     class Config:
         from_attributes = True
@@ -63,13 +64,6 @@ class ResumoMensalResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
-# ===== TAG =====
-
-class TagCreateRequest(BaseModel):
-    """Schema para request de criação de tag"""
-    nome: str = Field(min_length=1, max_length=50)
-    cor: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
 
 # ===== TAG =====
 
@@ -171,3 +165,6 @@ class ResultadoImportacaoResponse(BaseModel):
     transacoes_ids: List[int]
     mensagem: str
 
+
+# Rebuild models para resolver forward references
+TransacaoResponse.model_rebuild()

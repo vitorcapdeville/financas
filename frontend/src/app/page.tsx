@@ -14,6 +14,7 @@ interface HomeProps {
     diaInicio?: string;
     criterio?: string;
     tags?: string;
+    sem_tags?: string;
   }>;
 }
 
@@ -28,12 +29,13 @@ export default async function Home(props: HomeProps) {
     diaInicio
   );
 
-  // Constrói query string preservando período, diaInicio, criterio e tags
+  // Constrói query string preservando período, diaInicio, criterio, tags e sem_tags
   const queryParams = new URLSearchParams();
   if (periodo) queryParams.set("periodo", periodo);
   if (diaInicio) queryParams.set("diaInicio", diaInicio.toString());
   if (criterio) queryParams.set("criterio", criterio);
   if (searchParams.tags) queryParams.set("tags", searchParams.tags);
+  if (searchParams.sem_tags) queryParams.set("sem_tags", searchParams.sem_tags);
   const queryString = queryParams.toString();
 
   // Busca dados no servidor
@@ -45,6 +47,7 @@ export default async function Home(props: HomeProps) {
       data_inicio,
       data_fim,
       searchParams.tags,
+      searchParams.sem_tags === "true",
       criterio
     );
   } catch (error) {

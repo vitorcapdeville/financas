@@ -2,11 +2,14 @@
 DTOs (Data Transfer Objects) para Transações
 Objetos simples para transferir dados entre camadas
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime
-from typing import Optional, List, Dict
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 from app.domain.value_objects.tipo_transacao import TipoTransacao
+
+if TYPE_CHECKING:
+    from app.application.dto.tag_dto import TagDTO
 
 
 @dataclass
@@ -48,6 +51,7 @@ class TransacaoDTO:
     criado_em: datetime
     atualizado_em: datetime
     tag_ids: List[int]
+    tags: List["TagDTO"] = field(default_factory=list)  # Objetos Tag completos
 
 
 @dataclass
@@ -60,6 +64,7 @@ class FiltrosTransacaoDTO:
     categoria: Optional[str] = None
     tipo: Optional[TipoTransacao] = None
     tag_ids: Optional[List[int]] = None
+    sem_tags: bool = False  # Filtrar apenas transações sem tags
     criterio_data: str = "data_transacao"
 
 

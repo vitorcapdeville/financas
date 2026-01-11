@@ -1,12 +1,12 @@
 """
 Caso de uso: Obter Resumo Mensal de Transações
 """
-from typing import Dict, List, Optional
 from datetime import date
+from typing import Dict, List, Optional
 
-from app.domain.repositories.transacao_repository import ITransacaoRepository
-from app.domain.repositories.configuracao_repository import IConfiguracaoRepository
 from app.application.dto.transacao_dto import ResumoMensalDTO
+from app.domain.repositories.configuracao_repository import IConfiguracaoRepository
+from app.domain.repositories.transacao_repository import ITransacaoRepository
 
 
 class ObterResumoMensalUseCase:
@@ -34,7 +34,8 @@ class ObterResumoMensalUseCase:
         ano: Optional[int] = None,
         data_inicio: Optional[date] = None,
         data_fim: Optional[date] = None,
-        tag_ids: Optional[List[int]] = None
+        tag_ids: Optional[List[int]] = None,
+        sem_tags: bool = False
     ) -> ResumoMensalDTO:
         """
         Executa o caso de uso de resumo mensal.
@@ -45,6 +46,7 @@ class ObterResumoMensalUseCase:
             data_inicio: Data de início (prioridade sobre mes/ano)
             data_fim: Data de fim (prioridade sobre mes/ano)
             tag_ids: IDs de tags para filtrar
+            sem_tags: Se True, inclui transações sem tags (lógica OR com tag_ids)
             
         Returns:
             ResumoMensalDTO com totais e agrupamentos por categoria
@@ -72,6 +74,7 @@ class ObterResumoMensalUseCase:
             data_inicio=data_inicio,
             data_fim=data_fim,
             tag_ids=tag_ids,
+            sem_tags=sem_tags,
             criterio_data=criterio
         )
         

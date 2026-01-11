@@ -2,12 +2,12 @@
 Testes de integração para TransacaoRepository
 Valida operações CRUD com banco de dados real
 """
-import pytest
-from datetime import date, datetime
-from sqlmodel import Session
+from datetime import date
 
-from app.domain.entities.transacao import Transacao, TipoTransacao
+import pytest
+from app.domain.entities.transacao import TipoTransacao, Transacao
 from app.infrastructure.database.repositories.transacao_repository import TransacaoRepository
+from sqlmodel import Session
 
 
 @pytest.mark.integration
@@ -311,4 +311,164 @@ class TestTransacaoRepositoryIntegration:
         # Assert
         assert 1 in transacao_atualizada.tag_ids
         assert 2 in transacao_atualizada.tag_ids
-        assert len(transacao_atualizada.tag_ids) == 2
+        assert len(transacao_atualizada.tag_ids) == 2    
+    def test_listar_com_filtro_sem_tags(self, db_session: Session):
+        """
+        ARRANGE: Transações com e sem tags
+        ACT: Filtrar apenas transações sem tags
+        ASSERT: Retorna apenas transações sem tags
+        """
+        # Arrange
+        repository = TransacaoRepository(db_session)
+        
+        # Transação sem tags
+        transacao_sem_tags = Transacao(
+            data=date(2025, 1, 10),
+            descricao="Sem tags",
+            valor=100.00,
+            tipo=TipoTransacao.SAIDA,
+            origem="manual"
+        )
+        
+        # Transação com tags
+        transacao_com_tags = Transacao(
+            data=date(2025, 1, 15),
+            descricao="Com tags",
+            valor=50.00,
+            tipo=TipoTransacao.SAIDA,
+            origem="manual"
+        )
+        
+        t1 = repository.criar(transacao_sem_tags)
+        t2 = repository.criar(transacao_com_tags)
+        
+        # Adicionar tag à segunda transação
+        t2.adicionar_tag(1)
+        repository.atualizar(t2)
+        
+        # Act
+        transacoes = repository.listar(sem_tags=True)
+        
+        # Assert
+        descricoes = [t.descricao for t in transacoes]
+        assert "Sem tags" in descricoes
+        assert "Com tags" not in descricoes
+        assert all(len(t.tag_ids) == 0 for t in transacoes)
+    
+    def test_listar_com_filtro_tags_ou_sem_tags(self, db_session: Session):
+        """
+        ARRANGE: Transações com tag 1, tag 2 e sem tags
+        ACT: Filtrar por tag 1 OU sem tags
+        ASSERT: Retorna transações com tag 1 ou sem tags, mas não com apenas tag 2
+        """
+        # Arrange
+        repository = TransacaoRepository(db_session)
+        
+        # Transação sem tags
+        transacao_sem_tags = Transacao(
+            data=date(2025, 1, 10),
+            descricao="Sem tags",
+            valor=100.00,
+            tipo=TipoTransacao.SAIDA,
+            origem="manual"
+        )
+        
+        # Transação com tag 1
+        transacao_tag1 = Transacao(
+            data=date(2025, 1, 15),
+            descricao="Com tag 1",
+            valor=50.00,
+            tipo=TipoTransacao.SAIDA,
+            origem="manual"
+        )
+        
+        # Transação com tag 2
+        transacao_tag2 = Transacao(
+            data=date(2025, 1, 20),
+            descricao="Com tag 2",
+            valor=75.00,
+            tipo=TipoTransacao.SAIDA,
+            origem="manual"
+        )
+        
+        t1 = repository.criar(transacao_sem_tags)
+        t2 = repository.criar(transacao_tag1)
+        t3 = repository.criar(transacao_tag2)
+        
+        # Adicionar tags
+        t2.adicionar_tag(1)
+        repository.atualizar(t2)
+        
+        t3.adicionar_tag(2)
+        repository.atualizar(t3)
+        
+        # Act - Filtrar por tag 1 OU sem tags
+        transacoes = repository.listar(tag_ids=[1], sem_tags=True)
+        
+        # Assert
+        descricoes = [t.descricao for t in transacoes]
+        assert "Sem tags" in descricoes
+        assert "Com tag 1" in descricoes
+        assert "Com tag 2" not in descricoes
+    
+    def test_listar_com_filtro_multiplas_tags_ou_sem_tags(self, db_session: Session):
+        """
+        ARRANGE: Transações com diferentes tags e sem tags
+        ACT: Filtrar por tags [1,2] OU sem tags
+        ASSERT: Retorna transações com tag 1, tag 2 ou sem tags
+        """
+        # Arrange
+        repository = TransacaoRepository(db_session)
+        
+        # Criar transações
+        t_sem_tags = repository.criar(Transacao(
+            data=date(2025, 1, 10),
+            descricao="Sem tags",
+            valor=100.00,
+            tipo=TipoTransacao.SAIDA,
+            origem="manual"
+        ))
+        
+        t_tag1 = repository.criar(Transacao(
+            data=date(2025, 1, 15),
+            descricao="Tag 1",
+            valor=50.00,
+            tipo=TipoTransacao.SAIDA,
+            origem="manual"
+        ))
+        
+        t_tag2 = repository.criar(Transacao(
+            data=date(2025, 1, 20),
+            descricao="Tag 2",
+            valor=75.00,
+            tipo=TipoTransacao.SAIDA,
+            origem="manual"
+        ))
+        
+        t_tag3 = repository.criar(Transacao(
+            data=date(2025, 1, 25),
+            descricao="Tag 3",
+            valor=25.00,
+            tipo=TipoTransacao.SAIDA,
+            origem="manual"
+        ))
+        
+        # Adicionar tags
+        t_tag1.adicionar_tag(1)
+        repository.atualizar(t_tag1)
+        
+        t_tag2.adicionar_tag(2)
+        repository.atualizar(t_tag2)
+        
+        t_tag3.adicionar_tag(3)
+        repository.atualizar(t_tag3)
+        
+        # Act
+        transacoes = repository.listar(tag_ids=[1, 2], sem_tags=True)
+        
+        # Assert
+        descricoes = [t.descricao for t in transacoes]
+        assert "Sem tags" in descricoes
+        assert "Tag 1" in descricoes
+        assert "Tag 2" in descricoes
+        assert "Tag 3" not in descricoes

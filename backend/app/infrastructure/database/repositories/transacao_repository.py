@@ -4,13 +4,13 @@ Implementação concreta do repositório de Transações usando SQLModel
 from datetime import date
 from typing import List, Optional
 
-from sqlmodel import Session, select, or_, func
+from sqlmodel import Session, func, or_, select
 
 from app.domain.entities.transacao import Transacao
-from app.domain.value_objects.tipo_transacao import TipoTransacao
 from app.domain.repositories.transacao_repository import ITransacaoRepository
-from app.infrastructure.database.models.transacao_model import TransacaoModel
+from app.domain.value_objects.tipo_transacao import TipoTransacao
 from app.infrastructure.database.models.tag_model import TransacaoTagModel
+from app.infrastructure.database.models.transacao_model import TransacaoModel
 
 
 class TransacaoRepository(ITransacaoRepository):
@@ -59,6 +59,7 @@ class TransacaoRepository(ITransacaoRepository):
         categoria: Optional[str] = None,
         tipo: Optional[TipoTransacao] = None,
         tag_ids: Optional[List[int]] = None,
+        sem_tags: bool = False,
         criterio_data: str = "data_transacao"
     ) -> List[Transacao]:
         """Lista transações com filtros"""
@@ -83,11 +84,23 @@ class TransacaoRepository(ITransacaoRepository):
         if tipo:
             query = query.where(TransacaoModel.tipo == tipo.name)  # UPPERCASE
         
-        # Filtro de tags (OR)
-        if tag_ids:
-            query = query.join(TransacaoTagModel).where(
-                TransacaoTagModel.tag_id.in_(tag_ids)
-            ).distinct()
+        # Filtro de tags (OR lógico)
+        if tag_ids or sem_tags:
+            query = query.outerjoin(TransacaoTagModel)
+            
+            conditions = []
+            
+            # Adiciona condição para tags específicas
+            if tag_ids:
+                conditions.append(TransacaoTagModel.tag_id.in_(tag_ids))
+            
+            # Adiciona condição para transações sem tags
+            if sem_tags:
+                conditions.append(TransacaoTagModel.tag_id.is_(None))
+            
+            # Aplica OR entre as condições
+            if conditions:
+                query = query.where(or_(*conditions)).distinct()
         
         # Ordena por data DESC
         query = query.order_by(TransacaoModel.data.desc())

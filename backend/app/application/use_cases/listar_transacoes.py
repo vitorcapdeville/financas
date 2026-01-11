@@ -4,10 +4,12 @@ Orquestra a lógica de listagem de transações com filtros
 """
 from typing import List
 
-from app.domain.repositories.transacao_repository import ITransacaoRepository
-from app.domain.repositories.configuracao_repository import IConfiguracaoRepository
+from app.application.dto.tag_dto import TagDTO
 from app.application.dto.transacao_dto import FiltrosTransacaoDTO, TransacaoDTO
 from app.domain.entities.transacao import Transacao
+from app.domain.repositories.configuracao_repository import IConfiguracaoRepository
+from app.domain.repositories.tag_repository import ITagRepository
+from app.domain.repositories.transacao_repository import ITransacaoRepository
 
 
 class ListarTransacoesUseCase:
@@ -21,10 +23,12 @@ class ListarTransacoesUseCase:
     def __init__(
         self,
         transacao_repository: ITransacaoRepository,
-        configuracao_repository: IConfiguracaoRepository
+        configuracao_repository: IConfiguracaoRepository,
+        tag_repository: ITagRepository = None
     ):
         self._transacao_repository = transacao_repository
         self._configuracao_repository = configuracao_repository
+        self._tag_repository = tag_repository
     
     def execute(self, filtros: FiltrosTransacaoDTO) -> List[TransacaoDTO]:
         """
@@ -51,6 +55,7 @@ class ListarTransacoesUseCase:
             categoria=filtros.categoria,
             tipo=filtros.tipo,
             tag_ids=filtros.tag_ids,
+            sem_tags=filtros.sem_tags,
             criterio_data=criterio
         )
         
@@ -59,6 +64,21 @@ class ListarTransacoesUseCase:
     
     def _to_dto(self, transacao: Transacao) -> TransacaoDTO:
         """Converte entidade de domínio para DTO"""
+        # Carregar tags completas se tag_repository estiver disponível
+        tags_completas = []
+        if self._tag_repository:
+            for tag_id in transacao.tag_ids:
+                tag = self._tag_repository.buscar_por_id(tag_id)
+                if tag:
+                    tags_completas.append(TagDTO(
+                        id=tag.id,
+                        nome=tag.nome,
+                        cor=tag.cor,
+                        descricao=tag.descricao,
+                        criado_em=tag.criado_em,
+                        atualizado_em=tag.atualizado_em
+                    ))
+        
         return TransacaoDTO(
             id=transacao.id,
             data=transacao.data,
@@ -72,5 +92,6 @@ class ListarTransacoesUseCase:
             data_fatura=transacao.data_fatura,
             criado_em=transacao.criado_em,
             atualizado_em=transacao.atualizado_em,
-            tag_ids=transacao.tag_ids
+            tag_ids=transacao.tag_ids,
+            tags=tags_completas
         )

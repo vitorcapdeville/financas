@@ -73,10 +73,11 @@ def get_criar_transacao_use_case(
 
 def get_listar_transacoes_use_case(
     transacao_repo: TransacaoRepository = Depends(get_transacao_repository),
-    config_repo: ConfiguracaoRepository = Depends(get_configuracao_repository)
+    config_repo: ConfiguracaoRepository = Depends(get_configuracao_repository),
+    tag_repo: TagRepository = Depends(get_tag_repository)
 ) -> ListarTransacoesUseCase:
     """Fornece caso de uso de listar transações"""
-    return ListarTransacoesUseCase(transacao_repo, config_repo)
+    return ListarTransacoesUseCase(transacao_repo, config_repo, tag_repo)
 
 
 def get_atualizar_transacao_use_case(
@@ -102,6 +103,15 @@ def get_listar_categorias_use_case(
     """Fornece caso de uso de listar categorias"""
     from app.application.use_cases.listar_categorias import ListarCategoriasUseCase
     return ListarCategoriasUseCase(transacao_repo)
+
+
+def get_obter_transacao_use_case(
+    transacao_repo: TransacaoRepository = Depends(get_transacao_repository),
+    tag_repo: TagRepository = Depends(get_tag_repository)
+):
+    """Fornece caso de uso de obter transação com tags completas"""
+    from app.application.use_cases.obter_transacao import ObterTransacaoUseCase
+    return ObterTransacaoUseCase(transacao_repo, tag_repo)
 
 
 def get_restaurar_valor_original_use_case(
