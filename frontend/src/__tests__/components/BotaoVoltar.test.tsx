@@ -1,79 +1,82 @@
-import { render, screen } from '@testing-library/react';
-import BotaoVoltar from '@/components/BotaoVoltar';
-import { useSearchParams } from 'next/navigation';
+import { render, screen } from "@testing-library/react";
+import BotaoVoltar from "@/components/BotaoVoltar";
+import { useSearchParams } from "next/navigation";
 
-jest.mock('next/navigation', () => ({
+jest.mock("next/navigation", () => ({
   useSearchParams: jest.fn(),
 }));
 
-describe('BotaoVoltar Component', () => {
+describe("BotaoVoltar Component", () => {
   const mockUseSearchParams = useSearchParams as jest.Mock;
 
   beforeEach(() => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams());
   });
 
-  it('deve renderizar com texto padrão', () => {
+  it("deve renderizar com texto padrão", () => {
     render(<BotaoVoltar />);
-    expect(screen.getByText('← Voltar')).toBeInTheDocument();
+    expect(screen.getByText("Voltar")).toBeInTheDocument();
+    expect(screen.getByText("←")).toBeInTheDocument();
   });
 
-  it('deve renderizar com texto customizado', () => {
+  it("deve renderizar com texto customizado", () => {
     render(<BotaoVoltar>← Voltar ao Dashboard</BotaoVoltar>);
-    expect(screen.getByText('← Voltar ao Dashboard')).toBeInTheDocument();
+    expect(screen.getByText("Voltar ao Dashboard")).toBeInTheDocument();
   });
 
-  it('deve aplicar classe CSS padrão', () => {
+  it("deve aplicar classe CSS padrão", () => {
     render(<BotaoVoltar />);
-    const link = screen.getByText('← Voltar');
-    expect(link).toHaveClass('bg-gray-600', 'text-white', 'rounded-lg');
+    const link = screen.getByText("Voltar").closest("a");
+    expect(link).toHaveClass("group", "inline-flex", "items-center");
   });
 
-  it('deve aplicar classe CSS customizada', () => {
+  it("deve aplicar classe CSS customizada", () => {
     render(<BotaoVoltar className="custom-class">Voltar</BotaoVoltar>);
-    const link = screen.getByText('Voltar');
-    expect(link).toHaveClass('custom-class');
+    const link = screen.getByText("Voltar").closest("a");
+    expect(link).toHaveClass("custom-class");
   });
 
-  it('deve criar link para dashboard quando não há origem', () => {
+  it("deve criar link para dashboard quando não há origem", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams());
     render(<BotaoVoltar />);
-    const link = screen.getByText('← Voltar');
-    expect(link).toHaveAttribute('href', '/');
+    const link = screen.getByText("Voltar").closest("a");
+    expect(link).toHaveAttribute("href", "/");
   });
 
-  it('deve criar link para transacoes quando origem é transacoes', () => {
-    mockUseSearchParams.mockReturnValue(new URLSearchParams('origem=transacoes'));
-    render(<BotaoVoltar />);
-    const link = screen.getByText('← Voltar');
-    expect(link).toHaveAttribute('href', '/transacoes');
-  });
-
-  it('deve criar link para categoria quando origem é categoria', () => {
+  it("deve criar link para transacoes quando origem é transacoes", () => {
     mockUseSearchParams.mockReturnValue(
-      new URLSearchParams('origem=categoria:Alimentação')
+      new URLSearchParams("origem=transacoes")
     );
     render(<BotaoVoltar />);
-    const link = screen.getByText('← Voltar');
-    expect(link.getAttribute('href')).toContain('/categoria/Alimenta');
+    const link = screen.getByText("Voltar").closest("a");
+    expect(link).toHaveAttribute("href", "/transacoes");
   });
 
-  it('deve preservar período e diaInicio nos query params', () => {
+  it("deve criar link para categoria quando origem é categoria", () => {
     mockUseSearchParams.mockReturnValue(
-      new URLSearchParams('periodo=2024-06&diaInicio=15')
+      new URLSearchParams("origem=categoria:Alimentação")
     );
     render(<BotaoVoltar />);
-    const link = screen.getByText('← Voltar');
-    expect(link.getAttribute('href')).toContain('periodo=2024-06');
-    expect(link.getAttribute('href')).toContain('diaInicio=15');
+    const link = screen.getByText("Voltar").closest("a");
+    expect(link?.getAttribute("href")).toContain("/categoria/Alimenta");
   });
 
-  it('deve preservar tags nos query params', () => {
+  it("deve preservar período e diaInicio nos query params", () => {
     mockUseSearchParams.mockReturnValue(
-      new URLSearchParams('periodo=2024-06&tags=1,2,3')
+      new URLSearchParams("periodo=2024-06&diaInicio=15")
     );
     render(<BotaoVoltar />);
-    const link = screen.getByText('← Voltar');
-    expect(link.getAttribute('href')).toContain('tags=1%2C2%2C3');
+    const link = screen.getByText("Voltar").closest("a");
+    expect(link?.getAttribute("href")).toContain("periodo=2024-06");
+    expect(link?.getAttribute("href")).toContain("diaInicio=15");
+  });
+
+  it("deve preservar tags nos query params", () => {
+    mockUseSearchParams.mockReturnValue(
+      new URLSearchParams("periodo=2024-06&tags=1,2,3")
+    );
+    render(<BotaoVoltar />);
+    const link = screen.getByText("Voltar").closest("a");
+    expect(link?.getAttribute("href")).toContain("tags=1%2C2%2C3");
   });
 });
