@@ -1,47 +1,18 @@
 """
 Router refatorado para Configurações usando Clean Architecture
 """
-from typing import Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.application.dto.configuracao_dto import SalvarConfiguracaoDTO
 from app.application.use_cases.obter_configuracao import ObterConfiguracaoUseCase
 from app.application.use_cases.salvar_configuracao import SalvarConfiguracaoUseCase
-from app.application.use_cases.listar_configuracoes import ListarConfiguracoesUseCase
-from app.application.use_cases.deletar_configuracao import DeletarConfiguracaoUseCase
-from app.application.dto.configuracao_dto import SalvarConfiguracaoDTO
-from app.application.exceptions import EntityNotFoundException
+from app.interfaces.api.dependencies import get_obter_configuracao_use_case, get_salvar_configuracao_use_case
 from app.interfaces.api.schemas.request_response import ConfiguracaoRequest, ConfiguracaoResponse
-from app.interfaces.api.dependencies import (
-    get_obter_configuracao_use_case,
-    get_salvar_configuracao_use_case,
-    get_listar_configuracoes_use_case,
-    get_deletar_configuracao_use_case
-)
-
 
 router = APIRouter(
     prefix="/configuracoes",
     tags=["Configurações"]
 )
-
-
-@router.get("", response_model=Dict[str, str])
-def listar_configuracoes(
-    use_case: ListarConfiguracoesUseCase = Depends(get_listar_configuracoes_use_case)
-):
-    """
-    Lista todas as configurações.
-    
-    Returns:
-        Dicionário com todas as configurações (chave → valor)
-    """
-    try:
-        return use_case.execute()
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
-        )
 
 
 @router.get("/{chave}", response_model=ConfiguracaoResponse)
@@ -98,34 +69,6 @@ def salvar_configuracao(
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
-        )
-
-
-@router.delete("/{chave}", status_code=status.HTTP_204_NO_CONTENT)
-def deletar_configuracao(
-    chave: str,
-    use_case: DeletarConfiguracaoUseCase = Depends(get_deletar_configuracao_use_case)
-):
-    """
-    Deleta uma configuração.
-    
-    Args:
-        chave: Chave da configuração a deletar
-        
-    Raises:
-        404: Configuração não encontrada
-    """
-    try:
-        use_case.execute(chave)
-    except EntityNotFoundException as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
     except Exception as e:

@@ -15,14 +15,6 @@ class CriarTagDTO:
 
 
 @dataclass
-class AtualizarTagDTO:
-    """DTO para atualização parcial de tag"""
-    nome: Optional[str] = None
-    cor: Optional[str] = None
-    descricao: Optional[str] = None
-
-
-@dataclass
 class TagDTO:
     """DTO completo de tag (output)"""
     id: int

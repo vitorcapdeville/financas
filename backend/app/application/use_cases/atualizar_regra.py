@@ -1,12 +1,9 @@
 """Caso de uso: Atualizar Regra"""
 
-from app.domain.repositories.regra_repository import IRegraRepository
-from app.domain.entities.regra import Regra
 from app.application.dto.regra_dto import AtualizarRegraDTO, RegraDTO
-from app.application.exceptions.application_exceptions import (
-    EntityNotFoundException,
-    ValidationException
-)
+from app.application.exceptions.application_exceptions import EntityNotFoundException, ValidationException
+from app.domain.entities.regra import Regra
+from app.domain.repositories.regra_repository import IRegraRepository
 
 
 class AtualizarRegraUseCase:
@@ -67,7 +64,8 @@ class AtualizarRegraUseCase:
             regra.acao_valor = dto.acao_valor
         
         if dto.prioridade is not None:
-            regra.alterar_prioridade(dto.prioridade)
+            regra.prioridade = dto.prioridade
+            regra.atualizar()
         
         if dto.ativo is not None:
             if dto.ativo:

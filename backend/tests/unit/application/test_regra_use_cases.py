@@ -3,24 +3,21 @@ Testes unitários para Use Cases de Regras
 
 Objetivo: Testar lógica de aplicação de regras usando mocks
 """
-import pytest
-from unittest.mock import Mock, MagicMock
 from datetime import date
-from app.application.use_cases.criar_regra import CriarRegraUseCase
-from app.application.use_cases.listar_regras import ListarRegrasUseCase
-from app.application.use_cases.atualizar_regra import AtualizarRegraUseCase
-from app.application.use_cases.deletar_regra import DeletarRegraUseCase
-from app.application.use_cases.aplicar_regra_em_transacao import AplicarRegraEmTransacaoUseCase
+from unittest.mock import MagicMock, Mock
+
+import pytest
+from app.application.dto.regra_dto import AtualizarRegraDTO, CriarRegraDTO
+from app.application.exceptions.application_exceptions import EntityNotFoundException, ValidationException
 from app.application.use_cases.aplicar_regras import AplicarRegrasEmTransacaoUseCase
-from app.application.dto.regra_dto import CriarRegraDTO, AtualizarRegraDTO
+from app.application.use_cases.atualizar_regra import AtualizarRegraUseCase
+from app.application.use_cases.criar_regra import CriarRegraUseCase
+from app.application.use_cases.deletar_regra import DeletarRegraUseCase
+from app.application.use_cases.listar_regras import ListarRegrasUseCase
 from app.domain.entities.regra import Regra
 from app.domain.entities.transacao import Transacao
-from app.domain.value_objects.regra_enums import TipoAcao, CriterioTipo
+from app.domain.value_objects.regra_enums import CriterioTipo, TipoAcao
 from app.domain.value_objects.tipo_transacao import TipoTransacao
-from app.application.exceptions.application_exceptions import (
-    EntityNotFoundException,
-    ValidationException
-)
 
 
 @pytest.mark.unit
@@ -224,141 +221,6 @@ class TestDeletarRegraUseCase:
             use_case.execute(999)
         
         mock_repository.deletar.assert_not_called()
-
-
-@pytest.mark.unit
-class TestAplicarRegraEmTransacaoUseCase:
-    """Testes para AplicarRegraEmTransacaoUseCase"""
-    
-    def test_aplicar_regra_que_corresponde_com_sucesso(self):
-        """
-        ARRANGE: Regra e transação que correspondem
-        ACT: Aplicar regra
-        ASSERT: Transação deve ser modificada e persistida
-        """
-        # Arrange
-        regra = Regra(
-            id=1,
-            nome="Categorizar Uber",
-            tipo_acao=TipoAcao.ALTERAR_CATEGORIA,
-            criterio_tipo=CriterioTipo.DESCRICAO_CONTEM,
-            criterio_valor="uber",
-            acao_valor="Transporte",
-            ativo=True
-        )
-        
-        transacao = Transacao(
-            id=10,
-            data=date(2026, 1, 15),
-            descricao="Viagem UBER",
-            valor=25.00,
-            tipo=TipoTransacao.SAIDA,
-            origem="fatura_cartao"
-        )
-        
-        mock_regra_repository = Mock()
-        mock_regra_repository.buscar_por_id.return_value = regra
-        
-        mock_transacao_repository = Mock()
-        mock_transacao_repository.buscar_por_id.return_value = transacao
-        mock_transacao_repository.atualizar.return_value = transacao
-        
-        use_case = AplicarRegraEmTransacaoUseCase(
-            mock_regra_repository,
-            mock_transacao_repository
-        )
-        
-        # Act
-        resultado = use_case.execute(regra_id=1, transacao_id=10)
-        
-        # Assert
-        assert resultado.sucesso is True
-        assert transacao.categoria == "Transporte"
-        mock_transacao_repository.atualizar.assert_called_once()
-    
-    def test_aplicar_regra_que_nao_corresponde_nao_persiste(self):
-        """
-        ARRANGE: Regra e transação que NÃO correspondem
-        ACT: Aplicar regra
-        ASSERT: Transação não deve ser modificada nem persistida
-        """
-        # Arrange
-        regra = Regra(
-            id=1,
-            nome="Categorizar Uber",
-            tipo_acao=TipoAcao.ALTERAR_CATEGORIA,
-            criterio_tipo=CriterioTipo.DESCRICAO_CONTEM,
-            criterio_valor="uber",
-            acao_valor="Transporte",
-            ativo=True
-        )
-        
-        transacao = Transacao(
-            id=10,
-            data=date(2026, 1, 15),
-            descricao="Taxi comum",  # Não contém "uber"
-            valor=25.00,
-            tipo=TipoTransacao.SAIDA,
-            origem="manual"
-        )
-        
-        mock_regra_repository = Mock()
-        mock_regra_repository.buscar_por_id.return_value = regra
-        
-        mock_transacao_repository = Mock()
-        mock_transacao_repository.buscar_por_id.return_value = transacao
-        
-        use_case = AplicarRegraEmTransacaoUseCase(
-            mock_regra_repository,
-            mock_transacao_repository
-        )
-        
-        # Act
-        resultado = use_case.execute(regra_id=1, transacao_id=10)
-        
-        # Assert
-        assert resultado.sucesso is False
-        mock_transacao_repository.atualizar.assert_not_called()
-    
-    def test_aplicar_regra_inativa_nao_aplica(self):
-        """Testa que regra inativa não é aplicada"""
-        # Arrange
-        regra = Regra(
-            id=1,
-            nome="Regra desativada",
-            tipo_acao=TipoAcao.ALTERAR_CATEGORIA,
-            criterio_tipo=CriterioTipo.DESCRICAO_CONTEM,
-            criterio_valor="teste",
-            acao_valor="Categoria",
-            ativo=False  # Inativa
-        )
-        
-        transacao = Transacao(
-            id=10,
-            data=date(2026, 1, 15),
-            descricao="teste",
-            valor=100.00,
-            tipo=TipoTransacao.SAIDA,
-            origem="manual"
-        )
-        
-        mock_regra_repository = Mock()
-        mock_regra_repository.buscar_por_id.return_value = regra
-        
-        mock_transacao_repository = Mock()
-        mock_transacao_repository.buscar_por_id.return_value = transacao
-        
-        use_case = AplicarRegraEmTransacaoUseCase(
-            mock_regra_repository,
-            mock_transacao_repository
-        )
-        
-        # Act
-        resultado = use_case.execute(regra_id=1, transacao_id=10)
-        
-        # Assert
-        assert resultado.sucesso is False
-        mock_transacao_repository.atualizar.assert_not_called()
 
 
 @pytest.mark.unit

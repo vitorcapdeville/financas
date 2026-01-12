@@ -7,18 +7,14 @@ from typing import Generator
 from fastapi import Depends
 from sqlmodel import Session
 
-from app.application.use_cases.aplicar_regra_em_transacao import AplicarRegraEmTransacaoUseCase
 from app.application.use_cases.atualizar_regra import AtualizarRegraUseCase
-from app.application.use_cases.atualizar_tag import AtualizarTagUseCase
 from app.application.use_cases.criar_regra import CriarRegraUseCase
 from app.application.use_cases.criar_tag import CriarTagUseCase
 
 # Casos de Uso
 from app.application.use_cases.criar_transacao import CriarTransacaoUseCase
-from app.application.use_cases.deletar_configuracao import DeletarConfiguracaoUseCase
 from app.application.use_cases.deletar_regra import DeletarRegraUseCase
 from app.application.use_cases.deletar_tag import DeletarTagUseCase
-from app.application.use_cases.listar_configuracoes import ListarConfiguracoesUseCase
 from app.application.use_cases.listar_regras import ListarRegrasUseCase
 from app.application.use_cases.listar_tags import ListarTagsUseCase
 from app.application.use_cases.listar_transacoes import ListarTransacoesUseCase
@@ -164,13 +160,6 @@ def get_listar_tags_use_case(
     return ListarTagsUseCase(tag_repo)
 
 
-def get_atualizar_tag_use_case(
-    tag_repo: TagRepository = Depends(get_tag_repository)
-) -> AtualizarTagUseCase:
-    """Fornece caso de uso de atualizar tag"""
-    return AtualizarTagUseCase(tag_repo)
-
-
 def get_deletar_tag_use_case(
     tag_repo: TagRepository = Depends(get_tag_repository)
 ) -> DeletarTagUseCase:
@@ -208,12 +197,22 @@ def get_deletar_regra_use_case(
     return DeletarRegraUseCase(regra_repo)
 
 
-def get_aplicar_regra_em_transacao_use_case(
-    regra_repo: RegraRepository = Depends(get_regra_repository),
-    transacao_repo: TransacaoRepository = Depends(get_transacao_repository)
-) -> AplicarRegraEmTransacaoUseCase:
-    """Fornece caso de uso de aplicar regra em transação"""
-    return AplicarRegraEmTransacaoUseCase(regra_repo, transacao_repo)
+def get_aplicar_regra_retroativa_use_case(
+    transacao_repo: TransacaoRepository = Depends(get_transacao_repository),
+    regra_repo: RegraRepository = Depends(get_regra_repository)
+):
+    """Fornece caso de uso de aplicar regra retroativamente"""
+    from app.application.use_cases.aplicar_regra_retroativa import AplicarRegraRetroativamenteUseCase
+    return AplicarRegraRetroativamenteUseCase(transacao_repo, regra_repo)
+
+
+def get_aplicar_todas_regras_retroativa_use_case(
+    transacao_repo: TransacaoRepository = Depends(get_transacao_repository),
+    regra_repo: RegraRepository = Depends(get_regra_repository)
+):
+    """Fornece caso de uso de aplicar todas as regras retroativamente"""
+    from app.application.use_cases.aplicar_todas_regras_retroativa import AplicarTodasRegrasRetroativaUseCase
+    return AplicarTodasRegrasRetroativaUseCase(transacao_repo, regra_repo)
 
 
 # ===== CONFIGURAÇÕES =====
@@ -230,20 +229,6 @@ def get_salvar_configuracao_use_case(
 ) -> SalvarConfiguracaoUseCase:
     """Fornece caso de uso de salvar configuração"""
     return SalvarConfiguracaoUseCase(config_repo)
-
-
-def get_listar_configuracoes_use_case(
-    config_repo: ConfiguracaoRepository = Depends(get_configuracao_repository)
-) -> ListarConfiguracoesUseCase:
-    """Fornece caso de uso de listar configurações"""
-    return ListarConfiguracoesUseCase(config_repo)
-
-
-def get_deletar_configuracao_use_case(
-    config_repo: ConfiguracaoRepository = Depends(get_configuracao_repository)
-) -> DeletarConfiguracaoUseCase:
-    """Fornece caso de uso de deletar configuração"""
-    return DeletarConfiguracaoUseCase(config_repo)
 
 
 # ===== IMPORTAÇÃO =====

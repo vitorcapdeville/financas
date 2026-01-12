@@ -3,19 +3,15 @@ Testes unitários para Use Cases de Tags
 
 Objetivo: Testar lógica de aplicação de tags usando mocks
 """
-import pytest
 from unittest.mock import Mock
+
+import pytest
+from app.application.dto.tag_dto import CriarTagDTO
+from app.application.exceptions.application_exceptions import EntityNotFoundException, ValidationException
 from app.application.use_cases.criar_tag import CriarTagUseCase
-from app.application.use_cases.listar_tags import ListarTagsUseCase
-from app.application.use_cases.atualizar_tag import AtualizarTagUseCase
 from app.application.use_cases.deletar_tag import DeletarTagUseCase
-from app.application.dto.tag_dto import CriarTagDTO, AtualizarTagDTO
+from app.application.use_cases.listar_tags import ListarTagsUseCase
 from app.domain.entities.tag import Tag
-from app.application.exceptions.application_exceptions import (
-    EntityNotFoundException,
-    DuplicateEntityException,
-    ValidationException
-)
 
 
 @pytest.mark.unit
@@ -107,67 +103,6 @@ class TestListarTagsUseCase:
         
         # Assert
         assert len(resultado) == 0
-
-
-@pytest.mark.unit
-class TestAtualizarTagUseCase:
-    """Testes para AtualizarTagUseCase"""
-    
-    def test_atualizar_tag_existente_com_sucesso(self):
-        """
-        ARRANGE: Mock do repositório com tag existente
-        ACT: Executar use case
-        ASSERT: Verificar que tag foi atualizada
-        """
-        # Arrange
-        tag_existente = Tag(id=1, nome="Antigo")
-        tag_atualizada = Tag(id=1, nome="Novo")
-        
-        mock_repository = Mock()
-        mock_repository.buscar_por_id.return_value = tag_existente
-        mock_repository.buscar_por_nome.return_value = None  # Nome não duplicado
-        mock_repository.atualizar.return_value = tag_atualizada
-        
-        use_case = AtualizarTagUseCase(mock_repository)
-        dto = AtualizarTagDTO(nome="Novo")
-        
-        # Act
-        resultado = use_case.execute(1, dto)
-        
-        # Assert
-        mock_repository.buscar_por_id.assert_called_once_with(1)
-        mock_repository.atualizar.assert_called_once()
-        assert resultado.nome == "Novo"
-    
-    def test_atualizar_tag_inexistente_lanca_excecao(self):
-        """Testa que atualizar tag inexistente lança exceção"""
-        # Arrange
-        mock_repository = Mock()
-        mock_repository.buscar_por_id.return_value = None
-        
-        use_case = AtualizarTagUseCase(mock_repository)
-        dto = AtualizarTagDTO(nome="Novo")
-        
-        # Act & Assert
-        with pytest.raises(EntityNotFoundException):
-            use_case.execute(999, dto)
-    
-    def test_atualizar_tag_para_nome_duplicado_lanca_excecao(self):
-        """Testa que atualizar para nome já existente lança exceção"""
-        # Arrange
-        tag_existente = Tag(id=1, nome="Antigo")
-        tag_com_nome_duplicado = Tag(id=2, nome="Duplicado")
-        
-        mock_repository = Mock()
-        mock_repository.buscar_por_id.return_value = tag_existente
-        mock_repository.buscar_por_nome.return_value = tag_com_nome_duplicado
-        
-        use_case = AtualizarTagUseCase(mock_repository)
-        dto = AtualizarTagDTO(nome="Duplicado")
-        
-        # Act & Assert
-        with pytest.raises(ValidationException):
-            use_case.execute(1, dto)
 
 
 @pytest.mark.unit

@@ -25,7 +25,6 @@ from app.application.use_cases.obter_transacao import ObterTransacaoUseCase
 from app.application.use_cases.remover_tag_transacao import RemoverTagTransacaoUseCase
 from app.application.use_cases.restaurar_valor_original import RestaurarValorOriginalUseCase
 from app.domain.value_objects.tipo_transacao import TipoTransacao
-from app.infrastructure.database.repositories.transacao_repository import TransacaoRepository
 from app.interfaces.api.dependencies import (
     get_adicionar_tag_transacao_use_case,
     get_atualizar_transacao_use_case,
@@ -37,7 +36,6 @@ from app.interfaces.api.dependencies import (
     get_obter_transacao_use_case,
     get_remover_tag_transacao_use_case,
     get_restaurar_valor_original_use_case,
-    get_transacao_repository,
 )
 from app.interfaces.api.schemas.request_response import (
     ResumoMensalResponse,
@@ -266,20 +264,6 @@ def atualizar_transacao(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
-
-@router.delete("/{transacao_id}", status_code=status.HTTP_204_NO_CONTENT)
-def deletar_transacao(
-    transacao_id: int,
-    repository: TransacaoRepository = Depends(get_transacao_repository)
-):
-    """Deleta uma transação"""
-    sucesso = repository.deletar(transacao_id)
-    if not sucesso:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Transacao {transacao_id} não encontrada"
-        )
 
 
 @router.post("/{transacao_id}/restaurar-valor", response_model=TransacaoResponse)

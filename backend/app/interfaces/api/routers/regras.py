@@ -1,36 +1,28 @@
 """
 Router refatorado para Regras - Clean Architecture
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from typing import List, Optional
+from typing import List
 
-from app.interfaces.api.schemas.request_response import (
-    RegraCreateRequest,
-    RegraUpdateRequest,
-    RegraResponse,
-    ResultadoAplicacaoResponse
-)
-from app.interfaces.api.dependencies import (
-    get_criar_regra_use_case,
-    get_listar_regras_use_case,
-    get_atualizar_regra_use_case,
-    get_deletar_regra_use_case,
-    get_aplicar_regra_em_transacao_use_case,
-    get_regra_repository
-)
-from app.application.use_cases.criar_regra import CriarRegraUseCase
-from app.application.use_cases.listar_regras import ListarRegrasUseCase
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from app.application.dto.regra_dto import AtualizarRegraDTO, CriarRegraDTO
+from app.application.exceptions.application_exceptions import EntityNotFoundException, ValidationException
 from app.application.use_cases.atualizar_regra import AtualizarRegraUseCase
+from app.application.use_cases.criar_regra import CriarRegraUseCase
 from app.application.use_cases.deletar_regra import DeletarRegraUseCase
-from app.application.use_cases.aplicar_regra_em_transacao import AplicarRegraEmTransacaoUseCase
-from app.application.dto.regra_dto import CriarRegraDTO, AtualizarRegraDTO
-from app.application.exceptions.application_exceptions import (
-    ValidationException,
-    EntityNotFoundException
-)
+from app.application.use_cases.listar_regras import ListarRegrasUseCase
+from app.domain.value_objects.regra_enums import CriterioTipo, TipoAcao
 from app.infrastructure.database.repositories.regra_repository import RegraRepository
-from app.domain.value_objects.regra_enums import TipoAcao, CriterioTipo
-
+from app.interfaces.api.dependencies import (
+    get_aplicar_regra_retroativa_use_case,
+    get_aplicar_todas_regras_retroativa_use_case,
+    get_atualizar_regra_use_case,
+    get_criar_regra_use_case,
+    get_deletar_regra_use_case,
+    get_listar_regras_use_case,
+    get_regra_repository,
+)
+from app.interfaces.api.schemas.request_response import RegraCreateRequest, RegraResponse, RegraUpdateRequest
 
 router = APIRouter(prefix="/regras", tags=["Regras"])
 
@@ -249,39 +241,61 @@ def deletar_regra(
         )
 
 
-@router.post("/{regra_id}/aplicar/{transacao_id}", response_model=ResultadoAplicacaoResponse)
-def aplicar_regra_em_transacao(
+@router.post("/{regra_id}/aplicar", response_model=dict)
+def aplicar_regra_retroativamente(
     regra_id: int,
-    transacao_id: int,
-    use_case: AplicarRegraEmTransacaoUseCase = Depends(get_aplicar_regra_em_transacao_use_case)
+    use_case = Depends(get_aplicar_regra_retroativa_use_case)
 ):
     """
-    Aplica uma regra específica em uma transação.
+    Aplica uma regra específica retroativamente em todas as transações.
     
     Args:
         regra_id: ID da regra a aplicar
-        transacao_id: ID da transação alvo
         
     Returns:
-        Resultado da aplicação
+        Estatísticas da aplicação:
+        {
+            "total_processado": int,
+            "total_modificado": int
+        }
         
     Raises:
-        404: Regra ou transação não encontrada
+        404: Regra não encontrada
     """
     try:
-        resultado_dto = use_case.execute(regra_id, transacao_id)
-        
-        return ResultadoAplicacaoResponse(
-            sucesso=resultado_dto.sucesso,
-            transacoes_modificadas=resultado_dto.transacoes_modificadas,
-            mensagem=resultado_dto.mensagem
-        )
+        resultado = use_case.execute(regra_id)
+        return resultado
         
     except EntityNotFoundException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+
+@router.post("/aplicar-todas", response_model=dict)
+def aplicar_todas_regras_retroativamente(
+    use_case = Depends(get_aplicar_todas_regras_retroativa_use_case)
+):
+    """
+    Aplica todas as regras ativas retroativamente em todas as transações.
+    
+    Returns:
+        Estatísticas da aplicação:
+        {
+            "total_processado": int (número de transações processadas),
+            "total_modificado": int (número de transações modificadas)
+        }
+    """
+    try:
+        resultado = use_case.execute()
+        return resultado
+        
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
