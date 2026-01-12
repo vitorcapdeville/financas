@@ -1,86 +1,79 @@
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { revalidatePath } from "next/cache";
+import { transacoesService } from "@/services/api.service";
 
 export async function adicionarTagAction(transacaoId: number, tagId: number) {
-  const res = await fetch(`${API_URL}/transacoes/${transacaoId}/tags/${tagId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-  
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`Erro ao adicionar tag: ${error}`);
+  try {
+    await transacoesService.adicionarTag(transacaoId, tagId);
+    revalidatePath(`/transacao/${transacaoId}`);
+    return { success: true };
+  } catch (error) {
+    throw new Error(
+      `Erro ao adicionar tag: ${
+        error instanceof Error ? error.message : "Erro desconhecido"
+      }`
+    );
   }
-  
-  revalidatePath(`/transacao/${transacaoId}`);
-  return { success: true };
 }
 
 export async function removerTagAction(transacaoId: number, tagId: number) {
-  const res = await fetch(`${API_URL}/transacoes/${transacaoId}/tags/${tagId}`, {
-    method: 'DELETE',
-  });
-  
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`Erro ao remover tag: ${error}`);
+  try {
+    await transacoesService.removerTag(transacaoId, tagId);
+    revalidatePath(`/transacao/${transacaoId}`);
+    return { success: true };
+  } catch (error) {
+    throw new Error(
+      `Erro ao remover tag: ${
+        error instanceof Error ? error.message : "Erro desconhecido"
+      }`
+    );
   }
-  
-  revalidatePath(`/transacao/${transacaoId}`);
-  return { success: true };
 }
 
-export async function atualizarCategoriaAction(transacaoId: number, categoria: string) {
-  const res = await fetch(`${API_URL}/transacoes/${transacaoId}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ categoria: categoria.trim() }),
-  });
-  
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`Erro ao atualizar categoria: ${error}`);
+export async function atualizarCategoriaAction(
+  transacaoId: number,
+  categoria: string
+) {
+  try {
+    await transacoesService.atualizar(transacaoId, {
+      categoria: categoria.trim(),
+    });
+    revalidatePath(`/transacao/${transacaoId}`);
+    return { success: true };
+  } catch (error) {
+    throw new Error(
+      `Erro ao atualizar categoria: ${
+        error instanceof Error ? error.message : "Erro desconhecido"
+      }`
+    );
   }
-  
-  revalidatePath(`/transacao/${transacaoId}`);
-  return { success: true };
 }
 
 export async function atualizarValorAction(transacaoId: number, valor: number) {
-  const res = await fetch(`${API_URL}/transacoes/${transacaoId}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ valor }),
-  });
-  
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`Erro ao atualizar valor: ${error}`);
+  try {
+    await transacoesService.atualizar(transacaoId, { valor });
+    revalidatePath(`/transacao/${transacaoId}`);
+    return { success: true };
+  } catch (error) {
+    throw new Error(
+      `Erro ao atualizar valor: ${
+        error instanceof Error ? error.message : "Erro desconhecido"
+      }`
+    );
   }
-  
-  revalidatePath(`/transacao/${transacaoId}`);
-  return { success: true };
 }
 
 export async function restaurarValorOriginalAction(transacaoId: number) {
-  const res = await fetch(`${API_URL}/transacoes/${transacaoId}/restaurar-valor`, {
-    method: 'POST',
-  });
-  
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`Erro ao restaurar valor original: ${error}`);
+  try {
+    await transacoesService.restaurarValorOriginal(transacaoId);
+    revalidatePath(`/transacao/${transacaoId}`);
+    return { success: true };
+  } catch (error) {
+    throw new Error(
+      `Erro ao restaurar valor original: ${
+        error instanceof Error ? error.message : "Erro desconhecido"
+      }`
+    );
   }
-  
-  revalidatePath(`/transacao/${transacaoId}`);
-  return { success: true };
 }

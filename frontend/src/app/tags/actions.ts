@@ -1,49 +1,45 @@
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { revalidatePath } from "next/cache";
+import { tagsService } from "@/services/api.service";
 
 export async function criarTagAction(formData: FormData) {
-  const nome = formData.get('nome') as string;
-  const cor = formData.get('cor') as string;
-  const descricao = formData.get('descricao') as string;
+  const nome = formData.get("nome") as string;
+  const cor = formData.get("cor") as string;
+  const descricao = formData.get("descricao") as string;
 
   if (!nome || !cor) {
-    throw new Error('Nome e cor são obrigatórios');
+    throw new Error("Nome e cor são obrigatórios");
   }
 
-  const res = await fetch(`${API_URL}/tags`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+  try {
+    await tagsService.criar({
       nome: nome.trim(),
       cor: cor,
       descricao: descricao?.trim() || undefined,
-    }),
-  });
+    });
 
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`Erro ao criar tag: ${error}`);
+    revalidatePath("/tags");
+    return { success: true };
+  } catch (error) {
+    throw new Error(
+      `Erro ao criar tag: ${
+        error instanceof Error ? error.message : "Erro desconhecido"
+      }`
+    );
   }
-
-  revalidatePath('/tags');
-  return { success: true };
 }
 
 export async function deletarTagAction(tagId: number, tagNome: string) {
-  const res = await fetch(`${API_URL}/tags/${tagId}`, {
-    method: 'DELETE',
-  });
-
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`Erro ao deletar tag "${tagNome}": ${error}`);
+  try {
+    await tagsService.deletar(tagId);
+    revalidatePath("/tags");
+    return { success: true };
+  } catch (error) {
+    throw new Error(
+      `Erro ao deletar tag "${tagNome}": ${
+        error instanceof Error ? error.message : "Erro desconhecido"
+      }`
+    );
   }
-
-  revalidatePath('/tags');
-  return { success: true };
 }

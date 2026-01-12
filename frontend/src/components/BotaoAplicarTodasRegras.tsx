@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useTransition } from 'react';
-import { toast } from 'react-hot-toast';
-import { aplicarTodasRegrasAction } from '@/app/regras/actions';
-import { ModalConfirmacao } from './ModalConfirmacao';
+import { useState, useTransition } from "react";
+import { toast } from "react-hot-toast";
+import { aplicarTodasRegrasAction } from "@/app/regras/actions";
+import { ModalConfirmacao } from "./ModalConfirmacao";
 
 export function BotaoAplicarTodasRegras() {
   const [mostrarModal, setMostrarModal] = useState(false);
@@ -13,7 +13,9 @@ export function BotaoAplicarTodasRegras() {
     startTransition(async () => {
       try {
         const resultado = await aplicarTodasRegrasAction();
-        toast.success(`✅ Regras aplicadas com sucesso! ${resultado.total_aplicacoes} aplicações realizadas.`);
+        toast.success(
+          `✅ Regras aplicadas! ${resultado.total_modificado} de ${resultado.total_processado} transações modificadas.`
+        );
         setMostrarModal(false);
       } catch (error) {
         toast.error(`Erro ao aplicar regras: ${error}`);

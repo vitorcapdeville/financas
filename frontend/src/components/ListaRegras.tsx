@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useTransition } from 'react';
-import { toast } from 'react-hot-toast';
-import { Regra, CriterioTipo, TipoAcao } from '@/types';
-import { 
-  deletarRegraAction, 
-  toggleAtivoAction, 
+import { useState, useTransition } from "react";
+import { toast } from "react-hot-toast";
+import { Regra, CriterioTipo, TipoAcao } from "@/types";
+import {
+  deletarRegraAction,
+  toggleAtivoAction,
   aplicarRegraRetroativamenteAction,
-  atualizarPrioridadeAction 
-} from '@/app/regras/actions';
-import { ModalConfirmacao } from './ModalConfirmacao';
+  atualizarPrioridadeAction,
+} from "@/app/regras/actions";
+import { ModalConfirmacao } from "./ModalConfirmacao";
 
 interface ListaRegrasProps {
   regras: Regra[];
@@ -18,8 +18,10 @@ interface ListaRegrasProps {
 export function ListaRegras({ regras }: ListaRegrasProps) {
   const [regraParaDeletar, setRegraParaDeletar] = useState<number | null>(null);
   const [regraParaAplicar, setRegraParaAplicar] = useState<number | null>(null);
-  const [editandoPrioridade, setEditandoPrioridade] = useState<number | null>(null);
-  const [novaPrioridade, setNovaPrioridade] = useState<string>('');
+  const [editandoPrioridade, setEditandoPrioridade] = useState<number | null>(
+    null
+  );
+  const [novaPrioridade, setNovaPrioridade] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
   const handleToggleAtivo = (regraId: number) => {
@@ -48,7 +50,9 @@ export function ListaRegras({ regras }: ListaRegrasProps) {
     startTransition(async () => {
       try {
         const resultado = await aplicarRegraRetroativamenteAction(regraId);
-        toast.success(`✅ Regra aplicada com sucesso! ${resultado.transacoes_modificadas} transações modificadas.`);
+        toast.success(
+          `✅ Regra aplicada! ${resultado.total_modificado} de ${resultado.total_processado} transações modificadas.`
+        );
         setRegraParaAplicar(null);
       } catch (error) {
         toast.error(`Erro ao aplicar regra: ${error}`);
@@ -60,7 +64,7 @@ export function ListaRegras({ regras }: ListaRegrasProps) {
   const handleSalvarPrioridade = (regraId: number) => {
     const prioridade = parseInt(novaPrioridade);
     if (isNaN(prioridade) || prioridade < 1) {
-      toast.error('Prioridade deve ser um número maior ou igual a 1');
+      toast.error("Prioridade deve ser um número maior ou igual a 1");
       return;
     }
 
@@ -68,7 +72,7 @@ export function ListaRegras({ regras }: ListaRegrasProps) {
       try {
         await atualizarPrioridadeAction(regraId, prioridade);
         setEditandoPrioridade(null);
-        setNovaPrioridade('');
+        setNovaPrioridade("");
       } catch (error) {
         toast.error(`Erro ao atualizar prioridade: ${error}`);
       }
@@ -113,33 +117,38 @@ export function ListaRegras({ regras }: ListaRegrasProps) {
           <div
             key={regra.id}
             className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${
-              regra.ativo ? 'border-green-500' : 'border-gray-300'
+              regra.ativo ? "border-green-500" : "border-gray-300"
             }`}
           >
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 {/* Nome e Status */}
                 <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-semibold text-gray-900">{regra.nome}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {regra.nome}
+                  </h3>
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       regra.ativo
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-600'
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {regra.ativo ? '✓ Ativa' : '○ Inativa'}
+                    {regra.ativo ? "✓ Ativa" : "○ Inativa"}
                   </span>
                 </div>
 
                 {/* Critério e Ação */}
                 <div className="text-gray-700 mb-4">
                   <p className="mb-1">
-                    <span className="font-medium">Critério:</span>{' '}
-                    {formatarCriterio(regra.criterio_tipo, regra.criterio_valor)}
+                    <span className="font-medium">Critério:</span>{" "}
+                    {formatarCriterio(
+                      regra.criterio_tipo,
+                      regra.criterio_valor
+                    )}
                   </p>
                   <p>
-                    <span className="font-medium">Ação:</span>{' '}
+                    <span className="font-medium">Ação:</span>{" "}
                     {formatarAcao(regra)}
                   </p>
                 </div>
@@ -167,7 +176,7 @@ export function ListaRegras({ regras }: ListaRegrasProps) {
                       <button
                         onClick={() => {
                           setEditandoPrioridade(null);
-                          setNovaPrioridade('');
+                          setNovaPrioridade("");
                         }}
                         className="text-sm text-gray-600 hover:text-gray-700"
                         disabled={isPending}
@@ -177,7 +186,9 @@ export function ListaRegras({ regras }: ListaRegrasProps) {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900">{regra.prioridade}</span>
+                      <span className="font-semibold text-gray-900">
+                        {regra.prioridade}
+                      </span>
                       <button
                         onClick={() => {
                           setEditandoPrioridade(regra.id);
@@ -199,12 +210,12 @@ export function ListaRegras({ regras }: ListaRegrasProps) {
                   onClick={() => handleToggleAtivo(regra.id)}
                   className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
                     regra.ativo
-                      ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                      ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      : "bg-green-100 text-green-700 hover:bg-green-200"
                   }`}
                   disabled={isPending}
                 >
-                  {regra.ativo ? 'Desativar' : 'Ativar'}
+                  {regra.ativo ? "Desativar" : "Ativar"}
                 </button>
                 <button
                   onClick={() => setRegraParaAplicar(regra.id)}

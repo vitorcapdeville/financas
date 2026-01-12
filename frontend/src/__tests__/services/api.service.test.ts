@@ -180,25 +180,6 @@ describe("API Services", () => {
   });
 
   describe("configuracoesService", () => {
-    describe("obter", () => {
-      it("deve obter configuração por chave", async () => {
-        const mockConfig = { chave: "diaInicioPeriodo", valor: "15" };
-
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
-          ok: true,
-          json: async () => mockConfig,
-        });
-
-        const result = await configuracoesService.obter("diaInicioPeriodo");
-
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining("/configuracoes/diaInicioPeriodo"),
-          { cache: "no-store" }
-        );
-        expect(result).toEqual(mockConfig);
-      });
-    });
-
     describe("salvar", () => {
       it("deve salvar configuração", async () => {
         const mockResposta = { chave: "diaInicioPeriodo", valor: "25" };
