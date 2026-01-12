@@ -13,7 +13,7 @@ class TransacaoCreateRequest(BaseModel):
     """Schema para request de criação de transação"""
     data: date
     descricao: str = Field(min_length=1)
-    valor: float = Field(gt=0)
+    valor: float = Field(ge=0)
     tipo: str = Field(pattern="^(entrada|saida)$")
     categoria: Optional[str] = None
     origem: str = "manual"
@@ -24,7 +24,7 @@ class TransacaoCreateRequest(BaseModel):
 class TransacaoUpdateRequest(BaseModel):
     """Schema para request de atualização parcial"""
     descricao: Optional[str] = Field(None, min_length=1)
-    valor: Optional[float] = Field(None, gt=0)
+    valor: Optional[float] = Field(None, ge=0)
     categoria: Optional[str] = None
     observacoes: Optional[str] = None
     data_fatura: Optional[date] = None
@@ -150,11 +150,7 @@ class RegraResponse(BaseModel):
         from_attributes = True
 
 
-class ResultadoAplicacaoResponse(BaseModel):
-    """Schema para response de aplicação de regra"""
-    sucesso: bool
-    transacoes_modificadas: int
-    mensagem: str
+
 
 
 # ===== IMPORTAÇÃO =====

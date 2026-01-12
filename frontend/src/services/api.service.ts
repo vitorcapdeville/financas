@@ -21,7 +21,22 @@ async function handleFetch<T>(url: string, options?: RequestInit): Promise<T> {
     throw new Error(`HTTP ${res.status}: ${errorText || res.statusText}`);
   }
 
-  return res.json();
+  // Verifica se há conteúdo na resposta
+  const contentType = res.headers.get("content-type");
+  const contentLength = res.headers.get("content-length");
+
+  // Se não há conteúdo ou content-length é 0, retorna objeto vazio
+  if (contentLength === "0" || !contentType?.includes("application/json")) {
+    return {} as T;
+  }
+
+  // Tenta parsear o JSON, mas retorna objeto vazio se falhar
+  const text = await res.text();
+  if (!text || text.trim() === "") {
+    return {} as T;
+  }
+
+  return JSON.parse(text);
 }
 
 // Serviço de transações

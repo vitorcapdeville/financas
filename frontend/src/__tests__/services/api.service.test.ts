@@ -21,8 +21,17 @@ describe("API Services", () => {
           { id: 2, descricao: "Salário", valor: 5000, tipo: "entrada" },
         ];
 
+        const mockData = JSON.stringify(mockTransacoes);
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
+          headers: {
+            get: jest.fn((name: string) => {
+              if (name === "content-type") return "application/json";
+              if (name === "content-length") return mockData.length.toString();
+              return null;
+            }),
+          },
+          text: async () => mockData,
           json: async () => mockTransacoes,
         });
 
@@ -42,8 +51,17 @@ describe("API Services", () => {
       });
 
       it("deve listar transações sem parâmetros", async () => {
+        const mockData = JSON.stringify([]);
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
+          headers: {
+            get: jest.fn((name: string) => {
+              if (name === "content-type") return "application/json";
+              if (name === "content-length") return mockData.length.toString();
+              return null;
+            }),
+          },
+          text: async () => mockData,
           json: async () => [],
         });
 
@@ -59,9 +77,18 @@ describe("API Services", () => {
     describe("obter", () => {
       it("deve obter transação por ID", async () => {
         const mockTransacao = { id: 1, descricao: "Teste", valor: 100 };
+        const mockData = JSON.stringify(mockTransacao);
 
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
+          headers: {
+            get: jest.fn((name: string) => {
+              if (name === "content-type") return "application/json";
+              if (name === "content-length") return mockData.length.toString();
+              return null;
+            }),
+          },
+          text: async () => mockData,
           json: async () => mockTransacao,
         });
 
@@ -86,9 +113,18 @@ describe("API Services", () => {
         };
 
         const mockResposta = { id: 1, ...novaTransacao };
+        const mockData = JSON.stringify(mockResposta);
 
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
+          headers: {
+            get: jest.fn((name: string) => {
+              if (name === "content-type") return "application/json";
+              if (name === "content-length") return mockData.length.toString();
+              return null;
+            }),
+          },
+          text: async () => mockData,
           json: async () => mockResposta,
         });
 
@@ -110,9 +146,18 @@ describe("API Services", () => {
       it("deve atualizar transação", async () => {
         const atualizacao = { categoria: "Transporte", valor: 200 };
         const mockResposta = { id: 1, ...atualizacao };
+        const mockData = JSON.stringify(mockResposta);
 
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
+          headers: {
+            get: jest.fn((name: string) => {
+              if (name === "content-type") return "application/json";
+              if (name === "content-length") return mockData.length.toString();
+              return null;
+            }),
+          },
+          text: async () => mockData,
           json: async () => mockResposta,
         });
 
@@ -138,9 +183,18 @@ describe("API Services", () => {
           { id: 1, nome: "Essencial", cor: "#ff0000" },
           { id: 2, nome: "Lazer", cor: "#00ff00" },
         ];
+        const mockData = JSON.stringify(mockTags);
 
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
+          headers: {
+            get: jest.fn((name: string) => {
+              if (name === "content-type") return "application/json";
+              if (name === "content-length") return mockData.length.toString();
+              return null;
+            }),
+          },
+          text: async () => mockData,
           json: async () => mockTags,
         });
 
@@ -158,9 +212,18 @@ describe("API Services", () => {
       it("deve criar tag", async () => {
         const novaTag = { nome: "Assinaturas", cor: "#0000ff" };
         const mockResposta = { id: 1, ...novaTag };
+        const mockData = JSON.stringify(mockResposta);
 
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
+          headers: {
+            get: jest.fn((name: string) => {
+              if (name === "content-type") return "application/json";
+              if (name === "content-length") return mockData.length.toString();
+              return null;
+            }),
+          },
+          text: async () => mockData,
           json: async () => mockResposta,
         });
 
@@ -183,9 +246,18 @@ describe("API Services", () => {
     describe("salvar", () => {
       it("deve salvar configuração", async () => {
         const mockResposta = { chave: "diaInicioPeriodo", valor: "25" };
+        const mockData = JSON.stringify(mockResposta);
 
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
+          headers: {
+            get: jest.fn((name: string) => {
+              if (name === "content-type") return "application/json";
+              if (name === "content-length") return mockData.length.toString();
+              return null;
+            }),
+          },
+          text: async () => mockData,
           json: async () => mockResposta,
         });
 

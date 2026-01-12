@@ -24,9 +24,18 @@ describe("Fluxo de Integração - Transações", () => {
       };
 
       const mockResposta = { id: 3, ...novaTransacao, tags: [] };
+      const mockData = JSON.stringify(mockResposta);
 
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
+        headers: {
+          get: jest.fn((name: string) => {
+            if (name === "content-type") return "application/json";
+            if (name === "content-length") return mockData.length.toString();
+            return null;
+          }),
+        },
+        text: async () => mockData,
         json: async () => mockResposta,
       });
 
@@ -46,9 +55,18 @@ describe("Fluxo de Integração - Transações", () => {
         total_saidas: 2500.0,
         saldo: 2500.0,
       };
+      const mockData = JSON.stringify(mockResumo);
 
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
+        headers: {
+          get: jest.fn((name: string) => {
+            if (name === "content-type") return "application/json";
+            if (name === "content-length") return mockData.length.toString();
+            return null;
+          }),
+        },
+        text: async () => mockData,
         json: async () => mockResumo,
       });
 
