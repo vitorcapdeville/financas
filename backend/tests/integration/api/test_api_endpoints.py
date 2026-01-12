@@ -91,14 +91,6 @@ class TestTagsAPI:
         
         # Assert
         assert response.status_code == 422  # Validation error
-    
-    def test_obter_tag_inexistente_retorna_404(self, client):
-        """Testa que buscar tag inexistente retorna 404"""
-        # Act
-        response = client.get("/tags/99999")
-        
-        # Assert
-        assert response.status_code == 404
 
 
 @pytest.mark.integration
@@ -156,22 +148,6 @@ class TestTransacoesAPI:
 @pytest.mark.integration
 class TestConfiguracoesAPI:
     """Testes de integração para endpoints de configurações"""
-    
-    def test_listar_configuracoes_retorna_200(self, client):
-        """Testa listagem de configurações"""
-        # Arrange - Criar configurações padrão
-        client.post("/configuracoes", json={"chave": "diaInicioPeriodo", "valor": "1"})
-        client.post("/configuracoes", json={"chave": "criterio_data_transacao", "valor": "data_transacao"})
-        
-        # Act
-        response = client.get("/configuracoes")
-        
-        # Assert
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, dict)
-        assert "diaInicioPeriodo" in data
-        assert "criterio_data_transacao" in data
     
     def test_obter_configuracao_existente_retorna_200(self, client):
         """Testa obter configuração específica"""

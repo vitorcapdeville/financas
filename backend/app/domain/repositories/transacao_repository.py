@@ -93,32 +93,6 @@ class ITransacaoRepository(ABC):
         pass
     
     @abstractmethod
-    def deletar(self, id: int) -> bool:
-        """
-        Deleta uma transação.
-        
-        Args:
-            id: Identificador da transação
-            
-        Returns:
-            True se deletou, False se não encontrou
-        """
-        pass
-    
-    @abstractmethod
-    def listar_por_ids(self, ids: List[int]) -> List[Transacao]:
-        """
-        Lista transações por múltiplos IDs.
-        
-        Args:
-            ids: Lista de identificadores
-            
-        Returns:
-            Lista de transações encontradas
-        """
-        pass
-    
-    @abstractmethod
     def contar(
         self,
         mes: Optional[int] = None,

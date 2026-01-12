@@ -1,8 +1,8 @@
 """
 Implementação concreta do repositório de Configurações usando SQLModel
 """
-from typing import Optional, Dict
 from datetime import datetime
+from typing import Optional
 
 from sqlmodel import Session, select
 
@@ -43,20 +43,3 @@ class ConfiguracaoRepository(IConfiguracaoRepository):
             self._session.add(model)
         
         self._session.commit()
-    
-    def listar_todas(self) -> Dict[str, str]:
-        """Lista todas as configurações"""
-        query = select(ConfiguracaoModel)
-        models = self._session.exec(query).all()
-        return {m.chave: m.valor for m in models}
-    
-    def deletar(self, chave: str) -> bool:
-        """Deleta uma configuração"""
-        query = select(ConfiguracaoModel).where(ConfiguracaoModel.chave == chave)
-        model = self._session.exec(query).first()
-        if not model:
-            return False
-        
-        self._session.delete(model)
-        self._session.commit()
-        return True

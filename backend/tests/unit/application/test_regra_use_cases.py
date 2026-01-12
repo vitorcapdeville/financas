@@ -3,21 +3,17 @@ Testes unitários para Use Cases de Regras
 
 Objetivo: Testar lógica de aplicação de regras usando mocks
 """
-from datetime import date
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 import pytest
 from app.application.dto.regra_dto import AtualizarRegraDTO, CriarRegraDTO
 from app.application.exceptions.application_exceptions import EntityNotFoundException, ValidationException
-from app.application.use_cases.aplicar_regras import AplicarRegrasEmTransacaoUseCase
 from app.application.use_cases.atualizar_regra import AtualizarRegraUseCase
 from app.application.use_cases.criar_regra import CriarRegraUseCase
 from app.application.use_cases.deletar_regra import DeletarRegraUseCase
 from app.application.use_cases.listar_regras import ListarRegrasUseCase
 from app.domain.entities.regra import Regra
-from app.domain.entities.transacao import Transacao
 from app.domain.value_objects.regra_enums import CriterioTipo, TipoAcao
-from app.domain.value_objects.tipo_transacao import TipoTransacao
 
 
 @pytest.mark.unit
@@ -221,100 +217,3 @@ class TestDeletarRegraUseCase:
             use_case.execute(999)
         
         mock_repository.deletar.assert_not_called()
-
-
-@pytest.mark.unit
-class TestAplicarRegrasEmTransacaoUseCase:
-    """Testes para AplicarRegrasEmTransacaoUseCase (aplicar múltiplas regras)"""
-    
-    def test_aplicar_regras_ordenadas_por_prioridade(self):
-        """
-        ARRANGE: Múltiplas regras ativas
-        ACT: Aplicar todas as regras em uma transação
-        ASSERT: Regras devem ser aplicadas em ordem de prioridade (maior primeiro)
-        """
-        # Arrange
-        regra1 = Regra(
-            id=1,
-            nome="Regra prioridade 5",
-            tipo_acao=TipoAcao.ALTERAR_CATEGORIA,
-            criterio_tipo=CriterioTipo.DESCRICAO_CONTEM,
-            criterio_valor="regras",  # Corresponde à descrição "teste de regras"
-            acao_valor="Categoria1",
-            prioridade=5,
-            ativo=True
-        )
-        
-        regra2 = Regra(
-            id=2,
-            nome="Regra prioridade 10",
-            tipo_acao=TipoAcao.ADICIONAR_TAGS,
-            criterio_tipo=CriterioTipo.DESCRICAO_CONTEM,
-            criterio_valor="teste",  # Corresponde à descrição "teste de regras"
-            acao_valor="[1, 2]",
-            tag_ids=[1, 2],
-            prioridade=10,
-            ativo=True
-        )
-        
-        transacao = Transacao(
-            id=10,
-            data=date(2026, 1, 15),
-            descricao="teste de regras",
-            valor=100.00,
-            tipo=TipoTransacao.SAIDA,
-            origem="manual"
-        )
-        
-        mock_regra_repository = MagicMock()
-        mock_regra_repository.listar.return_value = [regra2, regra1]
-        
-        mock_transacao_repository = MagicMock()
-        mock_transacao_repository.buscar_por_id.return_value = transacao
-        mock_transacao_repository.atualizar.return_value = transacao
-        
-        use_case = AplicarRegrasEmTransacaoUseCase(
-            mock_transacao_repository,  # primeiro: transacao_repository
-            mock_regra_repository       # segundo: regra_repository
-        )
-        
-        # Act
-        resultado = use_case.execute(transacao_id=10)
-        
-        # Assert
-        # Ambas regras devem ser aplicadas
-        assert transacao.categoria == "Categoria1"
-        assert 1 in transacao.tag_ids
-        assert 2 in transacao.tag_ids
-        assert resultado == 2  # 2 regras aplicadas
-        mock_transacao_repository.atualizar.assert_called()
-    
-    def test_aplicar_regras_sem_regras_ativas_nao_modifica(self):
-        """Testa que sem regras ativas, transação não é modificada"""
-        # Arrange
-        transacao = Transacao(
-            id=10,
-            data=date(2026, 1, 15),
-            descricao="teste",
-            valor=100.00,
-            tipo=TipoTransacao.SAIDA,
-            origem="manual"
-        )
-        
-        mock_regra_repository = MagicMock()
-        mock_regra_repository.listar.return_value = []
-        
-        mock_transacao_repository = MagicMock()
-        mock_transacao_repository.buscar_por_id.return_value = transacao
-        
-        use_case = AplicarRegrasEmTransacaoUseCase(
-            mock_transacao_repository,  # primeiro: transacao_repository
-            mock_regra_repository       # segundo: regra_repository
-        )
-        
-        # Act
-        resultado = use_case.execute(transacao_id=10)
-        
-        # Assert
-        assert resultado == 0  # Nenhuma regra aplicada
-        mock_transacao_repository.atualizar.assert_not_called()

@@ -224,32 +224,6 @@ class TestTransacaoRepositoryIntegration:
         assert transacao_atualizada.categoria == "Nova Categoria"
         assert transacao_atualizada.atualizado_em > transacao_atualizada.criado_em
     
-    def test_deletar_transacao(self, db_session: Session):
-        """
-        ARRANGE: Transação existente
-        ACT: Deletar transação
-        ASSERT: Transação é removida do banco
-        """
-        # Arrange
-        repository = TransacaoRepository(db_session)
-        transacao = Transacao(
-            data=date(2025, 1, 15),
-            descricao="To be deleted",
-            valor=100.00,
-            tipo=TipoTransacao.SAIDA,
-            origem="manual"
-        )
-        
-        transacao_criada = repository.criar(transacao)
-        transacao_id = transacao_criada.id
-        
-        # Act
-        repository.deletar(transacao_id)
-        transacao_buscada = repository.buscar_por_id(transacao_id)
-        
-        # Assert
-        assert transacao_buscada is None
-    
     def test_restaurar_valor_original(self, db_session: Session):
         """
         ARRANGE: Transação com valor modificado

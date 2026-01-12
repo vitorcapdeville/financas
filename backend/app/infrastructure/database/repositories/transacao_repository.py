@@ -146,22 +146,6 @@ class TransacaoRepository(ITransacaoRepository):
         
         return self._to_entity(model)
     
-    def deletar(self, id: int) -> bool:
-        """Deleta transação"""
-        model = self._session.get(TransacaoModel, id)
-        if not model:
-            return False
-        
-        self._session.delete(model)
-        self._session.commit()
-        return True
-    
-    def listar_por_ids(self, ids: List[int]) -> List[Transacao]:
-        """Lista transações por IDs"""
-        query = select(TransacaoModel).where(TransacaoModel.id.in_(ids))
-        models = self._session.exec(query).all()
-        return [self._to_entity(m) for m in models]
-    
     def contar(
         self,
         mes: Optional[int] = None,
