@@ -133,10 +133,12 @@ def _inicializar_parsers(registry: ExtratoParserRegistry) -> None:
     from app.infrastructure.parsers.arquivo_tratado_parser import ArquivoTratadoParser
     from app.infrastructure.parsers.btg_extrato_parser import BTGExtratoParser
     from app.infrastructure.parsers.btg_fatura_parser import BTGFaturaParser
+    from app.infrastructure.parsers.nubank_fatura_parser import NubankFaturaParser
     
     # Registrar parsers de bancos
     registry.registrar(BTGExtratoParser())
     registry.registrar(BTGFaturaParser())
+    registry.registrar(NubankFaturaParser())
     
     # Registrar parser genérico para arquivos tratados
     registry.registrar(ArquivoTratadoParser())
