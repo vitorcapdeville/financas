@@ -17,6 +17,7 @@ class TransacaoCreateRequest(BaseModel):
     tipo: str = Field(pattern="^(entrada|saida)$")
     categoria: Optional[str] = None
     origem: str = "manual"
+    banco: Optional[str] = None
     observacoes: Optional[str] = None
     data_fatura: Optional[date] = None
 
@@ -40,6 +41,7 @@ class TransacaoResponse(BaseModel):
     tipo: str
     categoria: Optional[str]
     origem: str
+    banco: Optional[str] = None
     observacoes: Optional[str]
     data_fatura: Optional[date]
     criado_em: datetime

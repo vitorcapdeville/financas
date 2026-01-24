@@ -67,6 +67,7 @@ class AtualizarTransacaoUseCase:
             tipo=transacao.tipo,
             categoria=transacao.categoria,
             origem=transacao.origem,
+            banco=transacao.banco,
             observacoes=transacao.observacoes,
             data_fatura=transacao.data_fatura,
             criado_em=transacao.criado_em,

@@ -384,6 +384,7 @@ def _dto_to_response(dto: TransacaoDTO) -> TransacaoResponse:
         tipo=dto.tipo.value,
         categoria=dto.categoria,
         origem=dto.origem,
+        banco=dto.banco,
         observacoes=dto.observacoes,
         data_fatura=dto.data_fatura,
         criado_em=dto.criado_em,

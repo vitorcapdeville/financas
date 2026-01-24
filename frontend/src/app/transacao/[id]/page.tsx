@@ -165,6 +165,17 @@ export default async function TransacaoPage({
                   : "💳 Fatura de Cartão"}
               </p>
             </div>
+
+            {transacao.banco && (
+              <div>
+                <label className="block text-xs font-semibold text-[#8b8378] mb-2 uppercase tracking-wider">
+                  Banco
+                </label>
+                <p className="text-lg text-[#2d2d2d] font-medium">
+                  🏦 {transacao.banco.toUpperCase()}
+                </p>
+              </div>
+            )}
           </div>
 
           <div>

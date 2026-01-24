@@ -21,6 +21,7 @@ class CriarTransacaoDTO:
     tipo: TipoTransacao
     categoria: Optional[str] = None
     origem: str = "manual"
+    banco: Optional[str] = None
     observacoes: Optional[str] = None
     data_fatura: Optional[date] = None
 
@@ -46,11 +47,12 @@ class TransacaoDTO:
     tipo: TipoTransacao
     categoria: Optional[str]
     origem: str
-    observacoes: Optional[str]
-    data_fatura: Optional[date]
-    criado_em: datetime
-    atualizado_em: datetime
-    tag_ids: List[int]
+    banco: Optional[str] = None
+    observacoes: Optional[str] = None
+    data_fatura: Optional[date] = None
+    criado_em: datetime = field(default_factory=datetime.now)
+    atualizado_em: datetime = field(default_factory=datetime.now)
+    tag_ids: List[int] = field(default_factory=list)
     tags: List["TagDTO"] = field(default_factory=list)  # Objetos Tag completos
 
 

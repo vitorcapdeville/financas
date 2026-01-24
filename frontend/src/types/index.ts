@@ -33,6 +33,7 @@ export interface Transacao {
   tipo: TipoTransacao;
   categoria?: string;
   origem: string;
+  banco?: string;
   observacoes?: string;
   data_fatura?: string; // Data de fechamento/pagamento da fatura
   criado_em: string;
@@ -47,6 +48,7 @@ export interface TransacaoCreate {
   tipo: TipoTransacao;
   categoria?: string;
   origem?: string;
+  banco?: string;
   observacoes?: string;
   data_fatura?: string;
 }
