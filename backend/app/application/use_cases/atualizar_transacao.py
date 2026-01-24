@@ -1,9 +1,9 @@
 """
 Caso de uso: Atualizar Transação
 """
-from app.domain.repositories.transacao_repository import ITransacaoRepository
 from app.application.dto.transacao_dto import AtualizarTransacaoDTO, TransacaoDTO
 from app.application.exceptions.application_exceptions import EntityNotFoundException
+from app.domain.repositories.transacao_repository import ITransacaoRepository
 
 
 class AtualizarTransacaoUseCase:

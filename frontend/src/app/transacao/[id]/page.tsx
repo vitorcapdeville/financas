@@ -161,8 +161,8 @@ export default async function TransacaoPage({
                 {transacao.origem === "manual"
                   ? "✍️ Manual"
                   : transacao.origem === "extrato_bancario"
-                  ? "📊 Extrato Bancário"
-                  : "💳 Fatura de Cartão"}
+                    ? "📊 Extrato Bancário"
+                    : "💳 Fatura de Cartão"}
               </p>
             </div>
 

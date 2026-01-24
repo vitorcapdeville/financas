@@ -2,10 +2,10 @@
 Caso de Uso: Criar Transação
 Orquestra a lógica de criação de uma nova transação
 """
-from app.domain.entities.transacao import Transacao
-from app.domain.repositories.transacao_repository import ITransacaoRepository
 from app.application.dto.transacao_dto import CriarTransacaoDTO, TransacaoDTO
 from app.application.exceptions.application_exceptions import ValidationException
+from app.domain.entities.transacao import Transacao
+from app.domain.repositories.transacao_repository import ITransacaoRepository
 
 
 class CriarTransacaoUseCase:

@@ -1,9 +1,9 @@
 """
 Caso de uso: Restaurar Valor Original da Transação
 """
-from app.domain.repositories.transacao_repository import ITransacaoRepository
 from app.application.dto.transacao_dto import TransacaoDTO
 from app.application.exceptions.application_exceptions import EntityNotFoundException, ValidationException
+from app.domain.repositories.transacao_repository import ITransacaoRepository
 
 
 class RestaurarValorOriginalUseCase:

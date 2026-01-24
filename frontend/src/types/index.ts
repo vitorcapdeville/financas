@@ -1,6 +1,6 @@
 export enum TipoTransacao {
-  ENTRADA = 'entrada',
-  SAIDA = 'saida',
+  ENTRADA = "entrada",
+  SAIDA = "saida",
 }
 
 export interface Tag {
@@ -74,8 +74,8 @@ export interface ResumoMensal {
 }
 
 export enum CriterioDataTransacao {
-  DATA_TRANSACAO = 'data_transacao',
-  DATA_FATURA = 'data_fatura',
+  DATA_TRANSACAO = "data_transacao",
+  DATA_FATURA = "data_fatura",
 }
 
 export interface Configuracao {
@@ -92,15 +92,15 @@ export interface ConfiguracaoCreate {
 }
 
 export enum TipoAcao {
-  ALTERAR_CATEGORIA = 'alterar_categoria',
-  ADICIONAR_TAGS = 'adicionar_tags',
-  ALTERAR_VALOR = 'alterar_valor',
+  ALTERAR_CATEGORIA = "alterar_categoria",
+  ADICIONAR_TAGS = "adicionar_tags",
+  ALTERAR_VALOR = "alterar_valor",
 }
 
 export enum CriterioTipo {
-  DESCRICAO_EXATA = 'descricao_exata',
-  DESCRICAO_CONTEM = 'descricao_contem',
-  CATEGORIA = 'categoria',
+  DESCRICAO_EXATA = "descricao_exata",
+  DESCRICAO_CONTEM = "descricao_contem",
+  CATEGORIA = "categoria",
 }
 
 export interface Regra {
