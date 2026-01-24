@@ -1,9 +1,9 @@
 """Caso de uso: Criar Tag"""
 
-from app.domain.repositories.tag_repository import ITagRepository
-from app.domain.entities.tag import Tag
 from app.application.dto.tag_dto import CriarTagDTO, TagDTO
 from app.application.exceptions.application_exceptions import ValidationException
+from app.application.mappers.tag_mapper import TagMapper
+from app.domain.repositories.tag_repository import ITagRepository
 
 
 class CriarTagUseCase:
@@ -38,25 +38,11 @@ class CriarTagUseCase:
         if tag_existente:
             raise ValidationException(f"Já existe uma tag com o nome '{dto.nome}'")
         
-        # Criar entidade de domínio
-        tag = Tag(
-            nome=dto.nome,
-            cor=dto.cor
-        )
+        # Criar entidade de domínio usando mapper
+        tag = TagMapper.from_criar_dto(dto)
         
         # Persistir
         tag_criada = self._tag_repository.criar(tag)
         
-        # Retornar DTO
-        return self._to_dto(tag_criada)
-    
-    def _to_dto(self, tag: Tag) -> TagDTO:
-        """Converte entidade para DTO"""
-        return TagDTO(
-            id=tag.id,
-            nome=tag.nome,
-            cor=tag.cor,
-            descricao=tag.descricao,
-            criado_em=tag.criado_em,
-            atualizado_em=tag.atualizado_em
-        )
+        # Retornar DTO usando mapper
+        return TagMapper.to_dto(tag_criada)

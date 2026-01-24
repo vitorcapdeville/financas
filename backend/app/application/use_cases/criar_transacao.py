@@ -4,7 +4,7 @@ Orquestra a lógica de criação de uma nova transação
 """
 from app.application.dto.transacao_dto import CriarTransacaoDTO, TransacaoDTO
 from app.application.exceptions.application_exceptions import ValidationException
-from app.domain.entities.transacao import Transacao
+from app.application.mappers.transacao_mapper import TransacaoMapper
 from app.domain.repositories.transacao_repository import ITransacaoRepository
 
 
@@ -39,39 +39,11 @@ class CriarTransacaoUseCase:
         if not dto.descricao or dto.descricao.strip() == "":
             raise ValidationException("Descrição é obrigatória")
         
-        # Cria entidade de domínio
-        transacao = Transacao(
-            data=dto.data,
-            descricao=dto.descricao,
-            valor=dto.valor,
-            tipo=dto.tipo,
-            categoria=dto.categoria,
-            origem=dto.origem,
-            observacoes=dto.observacoes,
-            data_fatura=dto.data_fatura
-        )
+        # Cria entidade de domínio usando mapper
+        transacao = TransacaoMapper.from_criar_dto(dto)
         
         # Persiste via repositório
         transacao_criada = self._transacao_repository.criar(transacao)
         
-        # Retorna DTO
-        return self._to_dto(transacao_criada)
-    
-    def _to_dto(self, transacao: Transacao) -> TransacaoDTO:
-        """Converte entidade de domínio para DTO"""
-        return TransacaoDTO(
-            id=transacao.id,
-            data=transacao.data,
-            descricao=transacao.descricao,
-            valor=transacao.valor,
-            valor_original=transacao.valor_original,
-            tipo=transacao.tipo,
-            categoria=transacao.categoria,
-            origem=transacao.origem,
-            banco=transacao.banco,
-            observacoes=transacao.observacoes,
-            data_fatura=transacao.data_fatura,
-            criado_em=transacao.criado_em,
-            atualizado_em=transacao.atualizado_em,
-            tag_ids=transacao.tag_ids
-        )
+        # Retorna DTO usando mapper
+        return TransacaoMapper.to_dto(transacao_criada)

@@ -2,7 +2,7 @@
 
 from app.application.dto.regra_dto import AtualizarRegraDTO, RegraDTO
 from app.application.exceptions.application_exceptions import EntityNotFoundException, ValidationException
-from app.domain.entities.regra import Regra
+from app.application.mappers.regra_mapper import RegraMapper
 from app.domain.repositories.regra_repository import IRegraRepository
 
 
@@ -46,52 +46,11 @@ class AtualizarRegraUseCase:
             if regra_com_nome:
                 raise ValidationException(f"Já existe uma regra com o nome '{dto.nome}'")
         
-        # Atualizar campos fornecidos
-        if dto.nome is not None:
-            regra.nome = dto.nome
-            regra.atualizar()
-        
-        if dto.tipo_acao is not None:
-            regra.tipo_acao = dto.tipo_acao
-        
-        if dto.criterio_tipo is not None:
-            regra.criterio_tipo = dto.criterio_tipo
-        
-        if dto.criterio_valor is not None:
-            regra.criterio_valor = dto.criterio_valor
-        
-        if dto.acao_valor is not None:
-            regra.acao_valor = dto.acao_valor
-        
-        if dto.prioridade is not None:
-            regra.prioridade = dto.prioridade
-            regra.atualizar()
-        
-        if dto.ativo is not None:
-            if dto.ativo:
-                regra.ativar()
-            else:
-                regra.desativar()
-        
-        if dto.tag_ids is not None:
-            regra.tag_ids = dto.tag_ids
+        # Aplicar atualizações usando mapper
+        RegraMapper.aplicar_atualizacoes(regra, dto)
         
         # Persistir
         regra_atualizada = self._regra_repository.atualizar(regra)
         
-        # Retornar DTO
-        return self._to_dto(regra_atualizada)
-    
-    def _to_dto(self, regra: Regra) -> RegraDTO:
-        """Converte entidade para DTO"""
-        return RegraDTO(
-            id=regra.id,
-            nome=regra.nome,
-            tipo_acao=regra.tipo_acao,
-            criterio_tipo=regra.criterio_tipo,
-            criterio_valor=regra.criterio_valor,
-            acao_valor=regra.acao_valor,
-            prioridade=regra.prioridade,
-            ativo=regra.ativo,
-            tag_ids=regra.tag_ids
-        )
+        # Retornar DTO usando mapper
+        return RegraMapper.to_dto(regra_atualizada)

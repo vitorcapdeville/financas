@@ -2,9 +2,9 @@
 
 from typing import List
 
-from app.domain.repositories.tag_repository import ITagRepository
-from app.domain.entities.tag import Tag
 from app.application.dto.tag_dto import TagDTO
+from app.application.mappers.tag_mapper import TagMapper
+from app.domain.repositories.tag_repository import ITagRepository
 
 
 class ListarTagsUseCase:
@@ -30,21 +30,10 @@ class ListarTagsUseCase:
         # Buscar todas as tags
         tags = self._tag_repository.listar()
         
-        # Converter para DTOs
-        dtos = [self._to_dto(tag) for tag in tags]
+        # Converter para DTOs usando mapper
+        dtos = [TagMapper.to_dto(tag) for tag in tags]
         
         # Ordenar por nome
         dtos.sort(key=lambda t: t.nome)
         
         return dtos
-    
-    def _to_dto(self, tag: Tag) -> TagDTO:
-        """Converte entidade para DTO"""
-        return TagDTO(
-            id=tag.id,
-            nome=tag.nome,
-            cor=tag.cor,
-            descricao=tag.descricao,
-            criado_em=tag.criado_em,
-            atualizado_em=tag.atualizado_em
-        )

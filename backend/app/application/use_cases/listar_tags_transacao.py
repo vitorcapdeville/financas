@@ -3,10 +3,11 @@ Caso de uso: Listar Tags de uma Transação
 """
 from typing import List
 
-from app.domain.repositories.transacao_repository import ITransacaoRepository
-from app.domain.repositories.tag_repository import ITagRepository
 from app.application.dto.tag_dto import TagDTO
 from app.application.exceptions.application_exceptions import EntityNotFoundException
+from app.application.mappers.tag_mapper import TagMapper
+from app.domain.repositories.tag_repository import ITagRepository
+from app.domain.repositories.transacao_repository import ITransacaoRepository
 
 
 class ListarTagsTransacaoUseCase:
@@ -47,16 +48,5 @@ class ListarTagsTransacaoUseCase:
         # Buscar tags pelos IDs
         tags = self._tag_repository.listar_por_ids(transacao.tag_ids)
         
-        # Converter para DTOs
-        return [self._to_dto(tag) for tag in tags]
-    
-    def _to_dto(self, tag) -> TagDTO:
-        """Converte entidade para DTO"""
-        return TagDTO(
-            id=tag.id,
-            nome=tag.nome,
-            cor=tag.cor,
-            descricao=tag.descricao,
-            criado_em=tag.criado_em,
-            atualizado_em=tag.atualizado_em
-        )
+        # Converter para DTOs usando mapper
+        return [TagMapper.to_dto(tag) for tag in tags]

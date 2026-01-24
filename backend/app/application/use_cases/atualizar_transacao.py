@@ -3,6 +3,7 @@ Caso de uso: Atualizar Transação
 """
 from app.application.dto.transacao_dto import AtualizarTransacaoDTO, TransacaoDTO
 from app.application.exceptions.application_exceptions import EntityNotFoundException
+from app.application.mappers.transacao_mapper import TransacaoMapper
 from app.domain.repositories.transacao_repository import ITransacaoRepository
 
 
@@ -38,39 +39,11 @@ class AtualizarTransacaoUseCase:
         if not transacao:
             raise EntityNotFoundException("Transacao", transacao_id)
         
-        # Aplicar atualizações parciais
-        if dto.descricao is not None:
-            transacao.descricao = dto.descricao
-        if dto.valor is not None:
-            transacao.valor = dto.valor
-        if dto.categoria is not None:
-            transacao.categoria = dto.categoria
-        if dto.observacoes is not None:
-            transacao.observacoes = dto.observacoes
-        if dto.data_fatura is not None:
-            transacao.data_fatura = dto.data_fatura
+        # Aplicar atualizações usando mapper
+        TransacaoMapper.aplicar_atualizacoes(transacao, dto)
         
         # Atualizar transação no repositório
         transacao_atualizada = self._transacao_repository.atualizar(transacao)
         
-        # Converter para DTO de retorno
-        return self._to_dto(transacao_atualizada)
-    
-    def _to_dto(self, transacao) -> TransacaoDTO:
-        """Converte entidade para DTO"""
-        return TransacaoDTO(
-            id=transacao.id,
-            data=transacao.data,
-            descricao=transacao.descricao,
-            valor=transacao.valor,
-            valor_original=transacao.valor_original,
-            tipo=transacao.tipo,
-            categoria=transacao.categoria,
-            origem=transacao.origem,
-            banco=transacao.banco,
-            observacoes=transacao.observacoes,
-            data_fatura=transacao.data_fatura,
-            criado_em=transacao.criado_em,
-            atualizado_em=transacao.atualizado_em,
-            tag_ids=transacao.tag_ids
-        )
+        # Converter para DTO de retorno usando mapper
+        return TransacaoMapper.to_dto(transacao_atualizada)

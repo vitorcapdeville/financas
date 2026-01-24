@@ -3,6 +3,7 @@ Caso de uso: Restaurar Valor Original da Transação
 """
 from app.application.dto.transacao_dto import TransacaoDTO
 from app.application.exceptions.application_exceptions import EntityNotFoundException, ValidationException
+from app.application.mappers.transacao_mapper import TransacaoMapper
 from app.domain.repositories.transacao_repository import ITransacaoRepository
 
 
@@ -45,24 +46,5 @@ class RestaurarValorOriginalUseCase:
         # Restaurar valor
         transacao_restaurada = self._transacao_repository.restaurar_valor_original(transacao_id)
         
-        # Converter para DTO
-        return self._to_dto(transacao_restaurada)
-    
-    def _to_dto(self, transacao) -> TransacaoDTO:
-        """Converte entidade para DTO"""
-        return TransacaoDTO(
-            id=transacao.id,
-            data=transacao.data,
-            descricao=transacao.descricao,
-            valor=transacao.valor,
-            valor_original=transacao.valor_original,
-            tipo=transacao.tipo,
-            categoria=transacao.categoria,
-            origem=transacao.origem,
-            banco=transacao.banco,
-            observacoes=transacao.observacoes,
-            data_fatura=transacao.data_fatura,
-            criado_em=transacao.criado_em,
-            atualizado_em=transacao.atualizado_em,
-            tag_ids=transacao.tag_ids
-        )
+        # Converter para DTO usando mapper
+        return TransacaoMapper.to_dto(transacao_restaurada)

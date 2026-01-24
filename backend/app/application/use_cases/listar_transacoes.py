@@ -4,9 +4,9 @@ Orquestra a lógica de listagem de transações com filtros
 """
 from typing import List
 
-from app.application.dto.tag_dto import TagDTO
 from app.application.dto.transacao_dto import FiltrosTransacaoDTO, TransacaoDTO
-from app.domain.entities.transacao import Transacao
+from app.application.mappers.tag_mapper import TagMapper
+from app.application.mappers.transacao_mapper import TransacaoMapper
 from app.domain.repositories.configuracao_repository import IConfiguracaoRepository
 from app.domain.repositories.tag_repository import ITagRepository
 from app.domain.repositories.transacao_repository import ITransacaoRepository
@@ -59,40 +59,18 @@ class ListarTransacoesUseCase:
             criterio_data=criterio
         )
         
-        # Converte para DTOs
-        return [self._to_dto(t) for t in transacoes]
-    
-    def _to_dto(self, transacao: Transacao) -> TransacaoDTO:
-        """Converte entidade de domínio para DTO"""
-        # Carregar tags completas se tag_repository estiver disponível
-        tags_completas = []
-        if self._tag_repository:
-            for tag_id in transacao.tag_ids:
-                tag = self._tag_repository.buscar_por_id(tag_id)
-                if tag:
-                    tags_completas.append(TagDTO(
-                        id=tag.id,
-                        nome=tag.nome,
-                        cor=tag.cor,
-                        descricao=tag.descricao,
-                        criado_em=tag.criado_em,
-                        atualizado_em=tag.atualizado_em
-                    ))
+        # Converte para DTOs usando mapper
+        dtos = []
+        for transacao in transacoes:
+            # Carregar tags completas se tag_repository estiver disponível
+            tags_completas = []
+            if self._tag_repository:
+                for tag_id in transacao.tag_ids:
+                    tag = self._tag_repository.buscar_por_id(tag_id)
+                    if tag:
+                        tags_completas.append(TagMapper.to_dto(tag))
+            
+            # Converter transação para DTO com tags
+            dtos.append(TransacaoMapper.to_dto(transacao, tags=tags_completas))
         
-        return TransacaoDTO(
-            id=transacao.id,
-            data=transacao.data,
-            descricao=transacao.descricao,
-            valor=transacao.valor,
-            valor_original=transacao.valor_original,
-            tipo=transacao.tipo,
-            categoria=transacao.categoria,
-            origem=transacao.origem,
-            banco=transacao.banco,
-            observacoes=transacao.observacoes,
-            data_fatura=transacao.data_fatura,
-            criado_em=transacao.criado_em,
-            atualizado_em=transacao.atualizado_em,
-            tag_ids=transacao.tag_ids,
-            tags=tags_completas
-        )
+        return dtos
