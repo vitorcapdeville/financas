@@ -125,6 +125,7 @@ class TransacaoRepository(ITransacaoRepository):
         model.tipo = transacao.tipo.name  # UPPERCASE para ENUM PostgreSQL
         model.categoria = transacao.categoria
         model.origem = transacao.origem
+        model.banco = transacao.banco
         model.observacoes = transacao.observacoes
         model.data_fatura = transacao.data_fatura
         model.atualizado_em = transacao.atualizado_em
@@ -287,6 +288,7 @@ class TransacaoRepository(ITransacaoRepository):
             tipo=TipoTransacao[model.tipo],  # Converter UPPERCASE para enum
             categoria=model.categoria,
             origem=model.origem,
+            banco=model.banco,
             observacoes=model.observacoes,
             data_fatura=model.data_fatura,
             criado_em=model.criado_em,
@@ -305,6 +307,7 @@ class TransacaoRepository(ITransacaoRepository):
             tipo=entity.tipo.name,  # UPPERCASE para ENUM PostgreSQL
             categoria=entity.categoria,
             origem=entity.origem,
+            banco=entity.banco,
             observacoes=entity.observacoes,
             data_fatura=entity.data_fatura,
             criado_em=entity.criado_em,
