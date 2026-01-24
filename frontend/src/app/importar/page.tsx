@@ -1,54 +1,154 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { importacaoService } from "@/services/api.service";
 import { toast } from "react-hot-toast";
 
+interface ArquivoComSenha {
+  arquivo: File;
+  senha: string;
+  requerSenha: boolean;
+  pessoa?: string; // Nome da pessoa extraído do arquivo
+}
+
 export default function ImportarPage() {
   const [uploading, setUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [arquivos, setArquivos] = useState<ArquivoComSenha[]>([]);
+  const [senhasPorPessoa, setSenhasPorPessoa] = useState<Record<string, string>>({});
+
+  // Extrair nome da pessoa do arquivo BTG
+  const extrairNomePessoa = (nomeArquivo: string): string | null => {
+    // Padrão: YYYY-MM-DD_Fatura_NOME_DA_PESSOA_NUMERO_BTG.xlsx
+    const match = nomeArquivo.match(/^\d{4}-\d{2}-\d{2}_Fatura_(.+?)_\d+_BTG/i);
+    return match ? match[1] : null;
+  };
+
+  // Agrupar arquivos por pessoa
+  const arquivosPorPessoa = useMemo(() => {
+    const grupos: Record<string, ArquivoComSenha[]> = {};
+    
+    arquivos.forEach((item) => {
+      if (item.pessoa) {
+        if (!grupos[item.pessoa]) {
+          grupos[item.pessoa] = [];
+        }
+        grupos[item.pessoa].push(item);
+      }
+    });
+    
+    return grupos;
+  }, [arquivos]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
+    const files = Array.from(event.target.files || []);
+
+    const novosArquivos = files.map((file) => {
       // Detectar se é fatura BTG pelo nome
       const isBTGFatura = /^\d{4}-\d{2}-\d{2}_Fatura_.+_\d+_BTG/i.test(
         file.name,
       );
-      setShowPassword(isBTGFatura);
+      
+      const pessoa = isBTGFatura ? extrairNomePessoa(file.name) : null;
+
+      return {
+        arquivo: file,
+        senha: "",
+        requerSenha: isBTGFatura,
+        pessoa: pessoa || undefined,
+      };
+    });
+
+    setArquivos(novosArquivos);
+  };
+
+  const atualizarSenhaPessoa = (pessoa: string, senha: string) => {
+    setSenhasPorPessoa((prev) => ({
+      ...prev,
+      [pessoa]: senha,
+    }));
+  };
+
+  const removerArquivo = (index: number) => {
+    setArquivos((prev) => prev.filter((_, i) => i !== index));
+
+    // Resetar input se não houver mais arquivos
+    if (arquivos.length === 1) {
+      const fileInput = document.getElementById(
+        "file-input",
+      ) as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
     }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!selectedFile) return;
+    if (arquivos.length === 0) return;
+
+    // Validar senhas obrigatórias por pessoa
+    const pessoasSemSenha = Object.keys(arquivosPorPessoa).filter(
+      (pessoa) => !senhasPorPessoa[pessoa]
+    );
+    
+    if (pessoasSemSenha.length > 0) {
+      toast.error(`Preencha as senhas para: ${pessoasSemSenha.join(", ")}`);
+      return;
+    }
 
     try {
       setUploading(true);
-      const resultado = await importacaoService.importarArquivo(
-        selectedFile,
-        password || undefined,
-      );
-      toast.success(
-        `${resultado.total_importado} transações importadas com sucesso!`,
+
+      const files = arquivos.map((item) => item.arquivo);
+      
+      // Aplicar senha da pessoa a cada arquivo
+      const passwords = arquivos.map((item) => {
+        if (item.pessoa && senhasPorPessoa[item.pessoa]) {
+          return senhasPorPessoa[item.pessoa];
+        }
+        return "";
+      });
+
+      const resultado = await importacaoService.importarArquivos(
+        files,
+        passwords,
       );
 
-      // Limpar form
-      setSelectedFile(null);
-      setPassword("");
-      setShowPassword(false);
-      // Resetar input file
-      const fileInput = document.getElementById(
-        "file-input",
-      ) as HTMLInputElement;
-      if (fileInput) fileInput.value = "";
+      // Mostrar resultados
+      const sucessos = resultado.resultados.filter((r) => r.sucesso);
+      const erros = resultado.resultados.filter((r) => !r.sucesso);
+
+      if (sucessos.length > 0) {
+        const msg =
+          arquivos.length === 1
+            ? `${resultado.total_transacoes_importadas} transações importadas!`
+            : `${resultado.total_transacoes_importadas} transações importadas de ${sucessos.length} arquivo(s)!`;
+        toast.success(msg, { duration: 5000 });
+      }
+
+      if (erros.length > 0) {
+        erros.forEach((erro) => {
+          toast.error(`${erro.nome_arquivo}: ${erro.erro}`, { duration: 7000 });
+        });
+      }
+
+      // Limpar apenas os arquivos que tiveram sucesso
+      if (sucessos.length === arquivos.length) {
+        setArquivos([]);
+        setSenhasPorPessoa({});
+        const fileInput = document.getElementById(
+          "file-input",
+        ) as HTMLInputElement;
+        if (fileInput) fileInput.value = "";
+      } else {
+        // Remover apenas os bem-sucedidos
+        const nomesSuccesso = sucessos.map((s) => s.nome_arquivo);
+        setArquivos((prev) =>
+          prev.filter((item) => !nomesSuccesso.includes(item.arquivo.name)),
+        );
+      }
     } catch (error: any) {
       console.error("Erro ao importar:", error);
-      toast.error(error.response?.data?.detail || "Erro ao importar arquivo");
+      toast.error(error.message || "Erro ao importar arquivos");
     } finally {
       setUploading(false);
     }
@@ -68,7 +168,7 @@ export default function ImportarPage() {
         </p>
       </header>
 
-      {/* Upload Único */}
+      {/* Upload */}
       <div className="card-premium p-10 mb-8 animate-fade-in-up delay-200">
         <div className="mb-8 text-center">
           <div
@@ -92,10 +192,10 @@ export default function ImportarPage() {
             </svg>
           </div>
           <h2 className="text-3xl font-bold text-display text-[#0f3d3e] mb-3">
-            Enviar Arquivo
+            Selecionar Arquivos
           </h2>
           <p className="text-[#8b8378]">
-            O sistema detecta automaticamente o tipo de arquivo
+            Selecione um ou mais arquivos para importar
           </p>
         </div>
 
@@ -108,6 +208,7 @@ export default function ImportarPage() {
                 accept=".csv,.xlsx,.xls"
                 onChange={handleFileSelect}
                 disabled={uploading}
+                multiple
                 className="block w-full text-sm text-[#2d2d2d]
                     file:mr-4 file:py-4 file:px-8
                     file:rounded-xl file:border-0
@@ -122,56 +223,186 @@ export default function ImportarPage() {
             </label>
           </div>
 
-          {/* Campo de Senha (aparece apenas para faturas BTG) */}
-          {showPassword && (
-            <div className="animate-fade-in-scale">
-              <label className="block">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm font-semibold text-[#0f3d3e]">
-                    Senha do arquivo:
-                  </span>
-                  <div className="group relative">
-                    <svg
-                      className="w-4 h-4 text-[#8b8378] cursor-help"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+          {/* Lista de Arquivos Selecionados */}
+          {arquivos.length > 0 && (
+            <div className="space-y-6 animate-fade-in-scale">
+              <h3 className="text-lg font-bold text-[#0f3d3e]">
+                Arquivos Selecionados ({arquivos.length})
+              </h3>
+
+              {/* Arquivos que requerem senha (agrupados por pessoa) */}
+              {Object.keys(arquivosPorPessoa).length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-[#8b8378] uppercase tracking-wide">
+                    Faturas BTG (por pessoa)
+                  </h4>
+                  
+                  {Object.entries(arquivosPorPessoa).map(([pessoa, arquivosDaPessoa]) => (
+                    <div
+                      key={pessoa}
+                      className="bg-gradient-to-br from-[#faf8f5] to-[#f5f0e8] border-2 border-[#b8860b]/30 rounded-xl p-5 shadow-sm"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <div className="invisible group-hover:visible absolute left-0 top-6 w-64 p-2 bg-[#2d2d2d] text-white text-xs rounded-lg shadow-lg z-10">
-                      Faturas BTG são arquivos Excel protegidos por senha.
-                      Forneça a senha para descriptografar.
+                      {/* Nome da pessoa e campo de senha */}
+                      <div className="mb-4 pb-4 border-b border-[#d4c5b9]">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#b8860b] to-[#d4af37] flex items-center justify-center">
+                            <span className="text-white text-lg">👤</span>
+                          </div>
+                          <div className="flex-1">
+                            <h5 className="font-bold text-[#0f3d3e] text-lg">{pessoa}</h5>
+                            <p className="text-xs text-[#8b8378]">
+                              {arquivosDaPessoa.length} fatura{arquivosDaPessoa.length > 1 ? "s" : ""}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <input
+                          type="password"
+                          value={senhasPorPessoa[pessoa] || ""}
+                          onChange={(e) => atualizarSenhaPessoa(pessoa, e.target.value)}
+                          placeholder="Senha das faturas desta pessoa"
+                          disabled={uploading}
+                          className="w-full px-4 py-3 rounded-lg border-2 border-[#b8860b]/40
+                            focus:border-[#b8860b] focus:outline-none transition-colors
+                            disabled:opacity-50 disabled:cursor-not-allowed
+                            text-[#2d2d2d] placeholder:text-[#8b8378] font-medium
+                            bg-white shadow-sm"
+                          required
+                        />
+                      </div>
+
+                      {/* Lista de arquivos desta pessoa */}
+                      <div className="space-y-2">
+                        {arquivosDaPessoa.map((item, idx) => {
+                          const indexGlobal = arquivos.findIndex(a => a.arquivo === item.arquivo);
+                          return (
+                            <div
+                              key={idx}
+                              className="flex items-center gap-3 bg-white/60 rounded-lg p-3 hover:bg-white/80 transition-colors"
+                            >
+                              <svg
+                                className="w-4 h-4 text-[#156064] flex-shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                />
+                              </svg>
+                              <span className="text-sm text-[#2d2d2d] break-all flex-1">
+                                {item.arquivo.name}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => removerArquivo(indexGlobal)}
+                                disabled={uploading}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors
+                                  disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                                aria-label="Remover arquivo"
+                              >
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Digite a senha do arquivo Excel"
-                  disabled={uploading}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-[#d4c5b9]
-                    focus:border-[#156064] focus:outline-none transition-colors
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    text-[#2d2d2d] placeholder:text-[#8b8378]"
-                  required
-                />
-              </label>
+              )}
+
+              {/* Outros arquivos (sem senha) */}
+              {arquivos.filter(item => !item.pessoa).length > 0 && (
+                <div className="space-y-3">
+                  {Object.keys(arquivosPorPessoa).length > 0 && (
+                    <h4 className="text-sm font-semibold text-[#8b8378] uppercase tracking-wide">
+                      Outros Arquivos
+                    </h4>
+                  )}
+                  
+                  {arquivos.map((item, index) => {
+                    if (item.pessoa) return null;
+                    
+                    return (
+                      <div
+                        key={index}
+                        className="bg-[#faf8f5] border-2 border-[#d4c5b9] rounded-xl p-4"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <svg
+                                className="w-5 h-5 text-[#156064]"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                />
+                              </svg>
+                              <span className="font-semibold text-[#2d2d2d] break-all">
+                                {item.arquivo.name}
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => removerArquivo(index)}
+                            disabled={uploading}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors
+                              disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Remover arquivo"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
           {/* Botão de Envio */}
-          {selectedFile && (
+          {arquivos.length > 0 && (
             <div className="animate-fade-in-scale">
               <button
                 type="submit"
-                disabled={uploading || (showPassword && !password)}
+                disabled={uploading}
                 className="w-full py-4 px-8 rounded-xl font-semibold text-white
                   bg-gradient-to-br from-[#0f3d3e] to-[#156064]
                   shadow-[0_4px_12px_rgba(15,61,62,0.25)]
@@ -179,14 +410,16 @@ export default function ImportarPage() {
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
                   transition-all duration-300"
               >
-                {uploading ? "Processando..." : "Importar Arquivo"}
+                {uploading
+                  ? "Processando..."
+                  : `Importar ${arquivos.length} Arquivo${arquivos.length > 1 ? "s" : ""}`}
               </button>
             </div>
           )}
         </form>
 
         {uploading && (
-          <div className="mt-6 animate-fade-in-scale">
+          <div className="mt-6 flex flex-col items-center animate-fade-in-scale">
             <div className="inline-block animate-spin">
               <svg
                 className="w-8 h-8"
@@ -204,13 +437,13 @@ export default function ImportarPage() {
               </svg>
             </div>
             <p className="text-[#8b8378] mt-3 font-medium">
-              Processando arquivo...
+              Processando {arquivos.length} arquivo(s)...
             </p>
           </div>
         )}
       </div>
 
-      {/* Informações Adicionais */}
+      {/* Informacoes Adicionais */}
       <div className="mt-8 space-y-6 animate-fade-in-up delay-300">
         <div className="card-premium p-8 relative overflow-hidden">
           <div
@@ -222,7 +455,7 @@ export default function ImportarPage() {
           <div className="relative z-10">
             <h3 className="text-xl font-bold text-display text-[#0f3d3e] mb-4 flex items-center gap-3">
               <span className="text-2xl">🤖</span>
-              Detecção Automática
+              Detecao Automatica
             </h3>
             <p className="text-[#2d2d2d] mb-4">
               O sistema detecta automaticamente o tipo de arquivo pelo nome:

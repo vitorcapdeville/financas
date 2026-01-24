@@ -233,14 +233,14 @@ def get_salvar_configuracao_use_case(
 
 # ===== IMPORTAÇÃO =====
 
-def get_importar_arquivo_use_case(
+def get_importar_multiplos_arquivos_use_case(
     transacao_repo: TransacaoRepository = Depends(get_transacao_repository),
     tag_repo: TagRepository = Depends(get_tag_repository),
     regra_repo: RegraRepository = Depends(get_regra_repository)
 ):
-    """Fornece caso de uso de importar arquivo (ponto de entrada unificado)"""
-    from app.application.use_cases.importar_arquivo import ImportarArquivoUseCase
-    return ImportarArquivoUseCase(transacao_repo, tag_repo, regra_repo)
+    """Fornece caso de uso de importar arquivos (um ou múltiplos)"""
+    from app.application.use_cases.importar_multiplos_arquivos import ImportarMultiplosArquivosUseCase
+    return ImportarMultiplosArquivosUseCase(transacao_repo, tag_repo, regra_repo)
 
 
 # Você pode adicionar mais factories de casos de uso aqui conforme necessário

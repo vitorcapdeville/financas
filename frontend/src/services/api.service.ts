@@ -162,19 +162,34 @@ export const transacoesService = {
 };
 
 export const importacaoService = {
-  async importarArquivo(
-    arquivo: File,
-    password?: string,
+  async importarArquivos(
+    arquivos: File[],
+    passwords?: string[],
   ): Promise<{
-    total_importado: number;
-    transacoes_ids: number[];
-    mensagem: string;
+    total_arquivos: number;
+    arquivos_sucesso: number;
+    arquivos_erro: number;
+    total_transacoes_importadas: number;
+    resultados: Array<{
+      nome_arquivo: string;
+      sucesso: boolean;
+      total_importado: number;
+      transacoes_ids: number[];
+      mensagem: string;
+      erro?: string;
+    }>;
   }> {
     const formData = new FormData();
-    formData.append("arquivo", arquivo);
 
-    if (password) {
-      formData.append("password", password);
+    // Adicionar todos os arquivos
+    arquivos.forEach((arquivo) => {
+      formData.append("arquivos", arquivo);
+    });
+
+    // Adicionar senhas (formato: "senha1,senha2,senha3")
+    if (passwords && passwords.length > 0) {
+      const passwordsStr = passwords.join(",");
+      formData.append("passwords", passwordsStr);
     }
 
     const res = await fetch(`${API_URL}/importacao`, {

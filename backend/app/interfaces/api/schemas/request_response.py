@@ -157,11 +157,23 @@ class RegraResponse(BaseModel):
 
 # ===== IMPORTAÇÃO =====
 
-class ResultadoImportacaoResponse(BaseModel):
-    """Schema para response de importação"""
+class ResultadoArquivoResponse(BaseModel):
+    """Schema para response de um arquivo individual em importação múltipla"""
+    nome_arquivo: str
+    sucesso: bool
     total_importado: int
     transacoes_ids: List[int]
     mensagem: str
+    erro: Optional[str] = None
+
+
+class ResultadoImportacaoMultiplaResponse(BaseModel):
+    """Schema para response de importação de múltiplos arquivos"""
+    total_arquivos: int
+    arquivos_sucesso: int
+    arquivos_erro: int
+    total_transacoes_importadas: int
+    resultados: List[ResultadoArquivoResponse]
 
 
 # Rebuild models para resolver forward references

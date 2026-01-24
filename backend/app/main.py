@@ -12,11 +12,7 @@ Estrutura:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.interfaces.api.routers import transacoes
-from app.interfaces.api.routers import tags
-from app.interfaces.api.routers import regras
-from app.interfaces.api.routers import configuracoes
-from app.interfaces.api.routers import importacao
+from app.interfaces.api.routers import configuracoes, importacao, regras, tags, transacoes
 
 app = FastAPI(
     title="Finanças Pessoais API",
@@ -28,7 +24,7 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
