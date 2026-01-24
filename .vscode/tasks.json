@@ -49,8 +49,8 @@
         },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "^.*(Uvicorn running|INFO).*",
-          "endsPattern": "^.*(Application startup complete).*"
+          "beginsPattern": "^.*Will watch for changes.*",
+          "endsPattern": "^.*Application startup complete\\.$"
         }
       }
     },
