@@ -37,13 +37,14 @@ class BTGExtratoParser(IExtratoParser):
     def formatos_suportados(self) -> list[str]:
         return ['.xls', '.xlsx']
     
-    def parse(self, arquivo: BinaryIO, nome_arquivo: str) -> pd.DataFrame:
+    def parse(self, arquivo: BinaryIO, nome_arquivo: str, password: str | None = None) -> pd.DataFrame:
         """
         Faz parsing do extrato BTG.
         
         Args:
             arquivo: Conteúdo do arquivo Excel
             nome_arquivo: Nome do arquivo
+            password: Senha (não usada para extrato BTG)
             
         Returns:
             DataFrame com colunas: data, descricao, valor, categoria

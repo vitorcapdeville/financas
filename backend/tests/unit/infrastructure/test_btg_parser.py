@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 from app.application.exceptions import ValidationException
 from app.infrastructure.parsers.btg_extrato_parser import BTGExtratoParser
+from app.infrastructure.parsers.btg_fatura_parser import BTGFaturaParser
 
 
 class TestBTGExtratoParser:
@@ -132,3 +133,74 @@ class TestBTGExtratoParser:
             parser.parse(arquivo_invalido, "extrato.xls")
         
         assert "Erro ao processar extrato BTG" in str(exc_info.value)
+
+
+class TestBTGFaturaParser:
+    """Testes para BTGFaturaParser"""
+    
+    @pytest.fixture
+    def parser(self):
+        """Instância do parser de fatura BTG"""
+        return BTGFaturaParser()
+    
+    def test_propriedades_basicas(self, parser):
+        """Deve ter propriedades corretas"""
+        assert parser.parser_id == "btg_fatura"
+        assert parser.banco_id == "btg"
+        assert parser.nome_banco == "BTG Pactual - Fatura Cartão"
+        assert '.xls' in parser.formatos_suportados
+        assert '.xlsx' in parser.formatos_suportados
+    
+    def test_validar_formato_xlsx(self, parser):
+        """Deve aceitar arquivo .xlsx"""
+        assert parser.validar_formato("20240115_fatura.xlsx") == True
+    
+    def test_extract_data_fatura_valida(self, parser):
+        """Deve extrair data da fatura do nome do arquivo"""
+        data_fatura = parser._extract_data_fatura("2024-01-15_Fatura_NOME_1234_BTG.xlsx")
+        assert data_fatura == pd.Timestamp("2024-01-15")
+    
+    def test_extract_data_fatura_formato_invalido(self, parser):
+        """Deve lançar exceção para formato inválido de nome"""
+        with pytest.raises(ValidationException) as exc_info:
+            parser._extract_data_fatura("fatura_invalida.xlsx")
+        
+        assert "YYYY-MM-DD_Fatura_NOME_NNNN_BTG.xlsx" in str(exc_info.value)
+    
+    def test_parse_sem_senha_lanca_excecao(self, parser):
+        """Deve lançar exceção se senha não fornecida"""
+        arquivo = b"dados"
+        
+        with pytest.raises(ValidationException) as exc_info:
+            parser.parse(arquivo, "20240115_fatura.xlsx", password=None)
+        
+        assert "Senha é obrigatória" in str(exc_info.value)
+    
+    def test_process_parcelas_sem_parcelas(self, parser):
+        """Deve processar transação sem parcelas corretamente"""
+        df = pd.DataFrame({
+            'data': ['15/01/2024'],
+            'descricao': ['Compra à vista'],
+            'valor': [100.0],
+        })
+        
+        resultado = parser._process_parcelas(df)
+        
+        # Data deve permanecer a mesma
+        assert resultado.iloc[0]['data'] == pd.Timestamp('2024-01-15')
+    
+    def test_process_parcelas_com_parcelas(self, parser):
+        """Deve ajustar data baseado no número da parcela"""
+        df = pd.DataFrame({
+            'data': ['15/01/2024', '15/01/2024'],
+            'descricao': ['Compra parcelada (1/12)', 'Compra parcelada (3/12)'],
+            'valor': [50.0, 50.0],
+        })
+        
+        resultado = parser._process_parcelas(df)
+        
+        # Primeira parcela: data original
+        assert resultado.iloc[0]['data'] == pd.Timestamp('2024-01-15')
+        # Terceira parcela: data original + 2 meses
+        assert resultado.iloc[1]['data'] == pd.Timestamp('2024-03-15')
+

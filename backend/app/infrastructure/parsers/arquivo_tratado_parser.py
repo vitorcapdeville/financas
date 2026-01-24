@@ -39,13 +39,14 @@ class ArquivoTratadoParser(IExtratoParser):
     def formatos_suportados(self) -> list[str]:
         return ['.csv', '.xlsx', '.xls']
     
-    def parse(self, arquivo: BinaryIO, nome_arquivo: str) -> pd.DataFrame:
+    def parse(self, arquivo: BinaryIO, nome_arquivo: str, password: str | None = None) -> pd.DataFrame:
         """
         Lê arquivo já normalizado.
         
         Args:
             arquivo: Conteúdo do arquivo
             nome_arquivo: Nome do arquivo
+            password: Senha (não usada para arquivos tratados)
             
         Returns:
             DataFrame com colunas normalizadas
@@ -62,7 +63,18 @@ class ArquivoTratadoParser(IExtratoParser):
             if extensao == '.csv':
                 df = pd.read_csv(BytesIO(arquivo_bytes))
             elif extensao in ['.xlsx', '.xls']:
-                df = pd.read_excel(BytesIO(arquivo_bytes))
+                try:
+                    df = pd.read_excel(BytesIO(arquivo_bytes))
+                except Exception as e:
+                    # Detectar se é arquivo protegido por senha
+                    error_msg = str(e).lower()
+                    if 'ole2' in error_msg or 'encrypted' in error_msg or 'password' in error_msg:
+                        raise ValidationException(
+                            f"Arquivo '{nome_arquivo}' parece estar protegido por senha. "
+                            f"Para faturas BTG, o arquivo deve seguir o formato YYYY-MM-DD_Fatura_NOME_NNNN_BTG.xlsx "
+                            f"e você deve fornecer a senha no campo 'password'."
+                        )
+                    raise
             else:
                 raise ValidationException(
                     f"Formato não suportado: {extensao}. "

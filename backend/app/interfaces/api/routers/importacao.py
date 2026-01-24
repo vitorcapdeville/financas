@@ -4,7 +4,9 @@ Router para Importação de Transações
 Endpoint único que detecta automaticamente o tipo de arquivo
 baseado no padrão do nome.
 """
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from typing import Optional
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 
 from app.application.exceptions import ValidationException
 from app.application.use_cases.importar_arquivo import ImportarArquivoUseCase
@@ -20,6 +22,7 @@ router = APIRouter(
 @router.post("", response_model=ResultadoImportacaoResponse)
 async def importar_arquivo(
     arquivo: UploadFile = File(...),
+    password: Optional[str] = Form(None),
     use_case: ImportarArquivoUseCase = Depends(get_importar_arquivo_use_case)
 ):
     """
@@ -27,7 +30,7 @@ async def importar_arquivo(
     
     Detecção Automática por Padrão de Nome:
     - Extrato BTG: Extrato_YYYY-MM-DD_a_YYYY-MM-DD_NNNN
-    - Fatura BTG: YYYY-MM-DD_Fatura_NOME_NNNN_BTG
+    - Fatura BTG: YYYYMMDD_*.xlsx (requer senha)
     - Fatura Nubank: Nubank_YYYY-MM-DD
     - Extrato Nubank: NU_NNNN_DDMMMYYYY_DDMMMYYYY
     - Arquivo Tratado: qualquer outro padrão (CSV/Excel normalizado)
@@ -43,6 +46,10 @@ async def importar_arquivo(
     - Regras ativas aplicadas
     - Duplicatas ignoradas
     
+    Args:
+        arquivo: Arquivo a ser importado
+        password: Senha para arquivos protegidos (opcional, requerido para faturas BTG)
+    
     Returns:
         Resultado com total importado e IDs das transações
     """
@@ -53,7 +60,8 @@ async def importar_arquivo(
         # Executar caso de uso (detecção automática)
         resultado = use_case.execute(
             arquivo=conteudo,
-            nome_arquivo=arquivo.filename or ""
+            nome_arquivo=arquivo.filename or "",
+            password=password
         )
         
         return ResultadoImportacaoResponse(

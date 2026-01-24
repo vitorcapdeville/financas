@@ -18,7 +18,7 @@ class DetectorTipoArquivo:
     
     Padrões suportados:
     - btg_extrato: Extrato_YYYY-MM-DD_a_YYYY-MM-DD_NNNN...
-    - btg_fatura: YYYY-MM-DD_Fatura_NOME_NNNN_BTG
+    - btg_fatura: YYYY-MM-DD_Fatura_NOME_NNNN_BTG.xlsx
     - nubank_fatura: Nubank_YYYY-MM-DD
     - nubank_extrato: NU_NNNN_DDMMMYYYY_DDMMMYYYY
     """

@@ -47,7 +47,8 @@ class ImportarArquivoUseCase:
     def execute(
         self,
         arquivo: BinaryIO,
-        nome_arquivo: str
+        nome_arquivo: str,
+        password: str | None = None
     ) -> ResultadoImportacaoDTO:
         """
         Importa arquivo detectando automaticamente o tipo.
@@ -55,6 +56,7 @@ class ImportarArquivoUseCase:
         Args:
             arquivo: Conteúdo do arquivo (bytes)
             nome_arquivo: Nome do arquivo
+            password: Senha para arquivos protegidos (opcional)
             
         Returns:
             ResultadoImportacaoDTO com resultado da importação
@@ -69,7 +71,7 @@ class ImportarArquivoUseCase:
         parser = self._parser_registry.obter_parser(parser_id)
         
         # 3. Parser lê arquivo e retorna DataFrame normalizado
-        df_normalizado = parser.parse(arquivo, nome_arquivo)
+        df_normalizado = parser.parse(arquivo, nome_arquivo, password=password)
         
         # Validar que DataFrame tem dados
         if df_normalizado.empty:

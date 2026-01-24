@@ -52,13 +52,14 @@ class IExtratoParser(ABC):
         pass
     
     @abstractmethod
-    def parse(self, arquivo: BinaryIO, nome_arquivo: str) -> pd.DataFrame:
+    def parse(self, arquivo: BinaryIO, nome_arquivo: str, password: str | None = None) -> pd.DataFrame:
         """
         Faz parsing do arquivo de extrato bruto do banco.
         
         Args:
             arquivo: Conteúdo do arquivo (bytes)
             nome_arquivo: Nome do arquivo para determinar formato
+            password: Senha para arquivos protegidos (opcional)
             
         Returns:
             DataFrame normalizado com colunas:
