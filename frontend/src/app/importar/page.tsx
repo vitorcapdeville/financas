@@ -278,7 +278,7 @@ export default function ImportarPage() {
                 <div className="flex-1">
                   <strong className="block mb-2">Fatura Nubank:</strong>
                   <code className="block bg-[#faf8f5] px-3 py-2 rounded-lg text-xs border border-[#d4c5b9] font-mono">
-                    Nubank_YYYY-MM-DD
+                    Nubank_YYYY-MM-DD.csv
                   </code>
                 </div>
               </li>
