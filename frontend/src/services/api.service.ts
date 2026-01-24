@@ -95,7 +95,7 @@ export const transacoesService = {
       {
         method: "POST",
         cache: "no-store",
-      }
+      },
     );
   },
 
@@ -112,7 +112,7 @@ export const transacoesService = {
     data_fim?: string,
     tags?: string,
     sem_tags?: boolean,
-    criterio_data_transacao?: string
+    criterio_data_transacao?: string,
   ): Promise<ResumoMensal> {
     const searchParams = new URLSearchParams();
 
@@ -146,7 +146,7 @@ export const transacoesService = {
       {
         method: "POST",
         cache: "no-store",
-      }
+      },
     );
   },
 
@@ -156,19 +156,26 @@ export const transacoesService = {
       {
         method: "DELETE",
         cache: "no-store",
-      }
+      },
     );
   },
 };
 
 export const importacaoService = {
-  async importarArquivo(arquivo: File): Promise<{
+  async importarArquivo(
+    arquivo: File,
+    password?: string,
+  ): Promise<{
     total_importado: number;
     transacoes_ids: number[];
     mensagem: string;
   }> {
     const formData = new FormData();
     formData.append("arquivo", arquivo);
+
+    if (password) {
+      formData.append("password", password);
+    }
 
     const res = await fetch(`${API_URL}/importacao`, {
       method: "POST",
@@ -188,7 +195,7 @@ export const importacaoService = {
 export const configuracoesService = {
   async salvar(
     chave: string,
-    valor: string
+    valor: string,
   ): Promise<{ chave: string; valor: string }> {
     return handleFetch<{ chave: string; valor: string }>(
       `${API_URL}/configuracoes/`,
@@ -197,7 +204,7 @@ export const configuracoesService = {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ chave, valor }),
         cache: "no-store",
-      }
+      },
     );
   },
 };
@@ -244,7 +251,7 @@ export const regrasService = {
 
   async atualizarPrioridade(
     id: number,
-    novaPrioridade: number
+    novaPrioridade: number,
   ): Promise<Regra> {
     return handleFetch<Regra>(`${API_URL}/regras/${id}`, {
       method: "PATCH",
@@ -277,7 +284,7 @@ export const regrasService = {
   },
 
   async aplicarRetroativamente(
-    id: number
+    id: number,
   ): Promise<{ total_processado: number; total_modificado: number }> {
     return handleFetch<{ total_processado: number; total_modificado: number }>(
       `${API_URL}/regras/${id}/aplicar`,
@@ -285,7 +292,7 @@ export const regrasService = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
-      }
+      },
     );
   },
 
@@ -299,7 +306,7 @@ export const regrasService = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
-      }
+      },
     );
   },
 };

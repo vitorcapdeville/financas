@@ -7,20 +7,45 @@ import { toast } from "react-hot-toast";
 
 export default function ImportarPage() {
   const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (file) {
+      setSelectedFile(file);
+      // Detectar se é fatura BTG pelo nome
+      const isBTGFatura = /^\d{4}-\d{2}-\d{2}_Fatura_.+_\d+_BTG/i.test(
+        file.name,
+      );
+      setShowPassword(isBTGFatura);
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selectedFile) return;
 
     try {
       setUploading(true);
-      const resultado = await importacaoService.importarArquivo(file);
+      const resultado = await importacaoService.importarArquivo(
+        selectedFile,
+        password || undefined,
+      );
       toast.success(
-        `${resultado.total_importado} transações importadas com sucesso!`
+        `${resultado.total_importado} transações importadas com sucesso!`,
       );
 
-      // Limpar input
-      event.target.value = "";
+      // Limpar form
+      setSelectedFile(null);
+      setPassword("");
+      setShowPassword(false);
+      // Resetar input file
+      const fileInput = document.getElementById(
+        "file-input",
+      ) as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
     } catch (error: any) {
       console.error("Erro ao importar:", error);
       toast.error(error.response?.data?.detail || "Erro ao importar arquivo");
@@ -44,8 +69,8 @@ export default function ImportarPage() {
       </header>
 
       {/* Upload Único */}
-      <div className="card-premium p-10 mb-8 text-center animate-fade-in-up delay-200">
-        <div className="mb-8">
+      <div className="card-premium p-10 mb-8 animate-fade-in-up delay-200">
+        <div className="mb-8 text-center">
           <div
             className="inline-flex items-center justify-center p-6 rounded-2xl mb-6"
             style={{
@@ -74,24 +99,91 @@ export default function ImportarPage() {
           </p>
         </div>
 
-        <label className="block">
-          <input
-            type="file"
-            accept=".csv,.xlsx,.xls"
-            onChange={handleUpload}
-            disabled={uploading}
-            className="block w-full text-sm text-[#2d2d2d]
-                file:mr-4 file:py-4 file:px-8
-                file:rounded-xl file:border-0
-                file:font-semibold file:text-white
-                file:bg-gradient-to-br file:from-[#0f3d3e] file:to-[#156064]
-                file:shadow-[0_4px_12px_rgba(15,61,62,0.25)]
-                file:cursor-pointer file:transition-all file:duration-300
-                hover:file:scale-105 hover:file:shadow-[0_8px_16px_rgba(15,61,62,0.35)]
-                disabled:opacity-50 disabled:cursor-not-allowed
-                cursor-pointer"
-          />
-        </label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block">
+              <input
+                id="file-input"
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={handleFileSelect}
+                disabled={uploading}
+                className="block w-full text-sm text-[#2d2d2d]
+                    file:mr-4 file:py-4 file:px-8
+                    file:rounded-xl file:border-0
+                    file:font-semibold file:text-white
+                    file:bg-gradient-to-br file:from-[#0f3d3e] file:to-[#156064]
+                    file:shadow-[0_4px_12px_rgba(15,61,62,0.25)]
+                    file:cursor-pointer file:transition-all file:duration-300
+                    hover:file:scale-105 hover:file:shadow-[0_8px_16px_rgba(15,61,62,0.35)]
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    cursor-pointer"
+              />
+            </label>
+          </div>
+
+          {/* Campo de Senha (aparece apenas para faturas BTG) */}
+          {showPassword && (
+            <div className="animate-fade-in-scale">
+              <label className="block">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-semibold text-[#0f3d3e]">
+                    Senha do arquivo:
+                  </span>
+                  <div className="group relative">
+                    <svg
+                      className="w-4 h-4 text-[#8b8378] cursor-help"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <div className="invisible group-hover:visible absolute left-0 top-6 w-64 p-2 bg-[#2d2d2d] text-white text-xs rounded-lg shadow-lg z-10">
+                      Faturas BTG são arquivos Excel protegidos por senha.
+                      Forneça a senha para descriptografar.
+                    </div>
+                  </div>
+                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Digite a senha do arquivo Excel"
+                  disabled={uploading}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#d4c5b9]
+                    focus:border-[#156064] focus:outline-none transition-colors
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    text-[#2d2d2d] placeholder:text-[#8b8378]"
+                  required
+                />
+              </label>
+            </div>
+          )}
+
+          {/* Botão de Envio */}
+          {selectedFile && (
+            <div className="animate-fade-in-scale">
+              <button
+                type="submit"
+                disabled={uploading || (showPassword && !password)}
+                className="w-full py-4 px-8 rounded-xl font-semibold text-white
+                  bg-gradient-to-br from-[#0f3d3e] to-[#156064]
+                  shadow-[0_4px_12px_rgba(15,61,62,0.25)]
+                  hover:scale-105 hover:shadow-[0_8px_16px_rgba(15,61,62,0.35)]
+                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+                  transition-all duration-300"
+              >
+                {uploading ? "Processando..." : "Importar Arquivo"}
+              </button>
+            </div>
+          )}
+        </form>
 
         {uploading && (
           <div className="mt-6 animate-fade-in-scale">
@@ -159,13 +251,19 @@ export default function ImportarPage() {
                     background: "linear-gradient(135deg, #b8860b, #d4af37)",
                   }}
                 >
-                  <span className="text-white text-sm">💳</span>
+                  <span className="text-white text-sm">�</span>
                 </div>
                 <div className="flex-1">
-                  <strong className="block mb-2">Fatura BTG:</strong>
-                  <code className="block bg-[#faf8f5] px-3 py-2 rounded-lg text-xs border border-[#d4c5b9] font-mono">
-                    YYYY-MM-DD_Fatura_NOME_NNNN_BTG
+                  <strong className="block mb-2">
+                    Fatura BTG (requer senha):
+                  </strong>
+                  <code className="block bg-[#faf8f5] px-3 py-2 rounded-lg text-xs border border-[#d4c5b9] font-mono mb-2">
+                    YYYY-MM-DD_Fatura_NOME_NNNN_BTG.xlsx
                   </code>
+                  <span className="text-xs text-[#8b8378] italic">
+                    O campo de senha aparecerá automaticamente ao selecionar
+                    este tipo de arquivo
+                  </span>
                 </div>
               </li>
               <li className="flex items-start gap-3">
