@@ -23,6 +23,7 @@ router = APIRouter(
 @router.post("", response_model=ResultadoImportacaoMultiplaResponse)
 async def importar_arquivos(
     arquivos: List[UploadFile] = File(..., description="Um ou múltiplos arquivos para importação"),
+    usuario_id: int = Form(1, description="ID do usuário responsável pelas transações"),
     passwords: Optional[str] = Form(None, description="Senhas separadas por vírgula (opcional)"),
     use_case: ImportarMultiplosArquivosUseCase = Depends(get_importar_multiplos_arquivos_use_case)
 ):
@@ -88,7 +89,7 @@ async def importar_arquivos(
         )
     
     # Executar caso de uso
-    resultado = use_case.execute(arquivos_para_processar)
+    resultado = use_case.execute(arquivos_para_processar, usuario_id=usuario_id)
     
     # Converter DTOs para response schemas
     return ResultadoImportacaoMultiplaResponse(

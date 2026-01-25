@@ -47,6 +47,7 @@ class Transacao:
     
     # Relacionamentos (IDs apenas - sem acoplamento com ORM)
     tag_ids: List[int] = field(default_factory=list)
+    usuario_id: int = 1  # ID do usuário responsável (padrão: "Não definido")
     
     def __post_init__(self):
         """Valida regras de negócio após inicialização"""

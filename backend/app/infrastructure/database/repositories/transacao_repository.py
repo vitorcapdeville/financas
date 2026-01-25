@@ -129,6 +129,7 @@ class TransacaoRepository(ITransacaoRepository):
         model.observacoes = transacao.observacoes
         model.data_fatura = transacao.data_fatura
         model.atualizado_em = transacao.atualizado_em
+        model.usuario_id = transacao.usuario_id
         
         # Atualiza tags (remove antigas e adiciona novas)
         # Remove tags existentes
@@ -293,7 +294,8 @@ class TransacaoRepository(ITransacaoRepository):
             data_fatura=model.data_fatura,
             criado_em=model.criado_em,
             atualizado_em=model.atualizado_em,
-            tag_ids=tag_ids
+            tag_ids=tag_ids,
+            usuario_id=model.usuario_id
         )
     
     def _to_model(self, entity: Transacao) -> TransacaoModel:
@@ -311,5 +313,6 @@ class TransacaoRepository(ITransacaoRepository):
             observacoes=entity.observacoes,
             data_fatura=entity.data_fatura,
             criado_em=entity.criado_em,
-            atualizado_em=entity.atualizado_em
+            atualizado_em=entity.atualizado_em,
+            usuario_id=entity.usuario_id
         )

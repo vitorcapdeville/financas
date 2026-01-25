@@ -20,6 +20,7 @@ from app.application.use_cases.importar_arquivo import ImportarArquivoUseCase
 from app.domain.repositories.regra_repository import IRegraRepository
 from app.domain.repositories.tag_repository import ITagRepository
 from app.domain.repositories.transacao_repository import ITransacaoRepository
+from app.domain.repositories.usuario_repository import IUsuarioRepository
 
 
 class ImportarMultiplosArquivosUseCase:
@@ -40,18 +41,21 @@ class ImportarMultiplosArquivosUseCase:
         self,
         transacao_repo: ITransacaoRepository,
         tag_repo: ITagRepository,
-        regra_repo: IRegraRepository
+        regra_repo: IRegraRepository,
+        usuario_repo: IUsuarioRepository
     ):
         # Compõe use case existente (reuso de código)
         self._importar_arquivo_use_case = ImportarArquivoUseCase(
             transacao_repo=transacao_repo,
             tag_repo=tag_repo,
-            regra_repo=regra_repo
+            regra_repo=regra_repo,
+            usuario_repo=usuario_repo
         )
     
     def execute(
         self,
-        arquivos: List[Tuple[BinaryIO, str, str | None]]
+        arquivos: List[Tuple[BinaryIO, str, str | None]],
+        usuario_id: int = 1
     ) -> ResultadoImportacaoMultiplaDTO:
         """
         Importa múltiplos arquivos detectando automaticamente o tipo de cada um.
@@ -61,6 +65,7 @@ class ImportarMultiplosArquivosUseCase:
                      - arquivo: Conteúdo do arquivo (bytes)
                      - nome_arquivo: Nome do arquivo
                      - password: Senha para arquivos protegidos (opcional)
+            usuario_id: ID do usuário responsável pelas transações
             
         Returns:
             ResultadoImportacaoMultiplaDTO com resultado consolidado
@@ -80,6 +85,7 @@ class ImportarMultiplosArquivosUseCase:
                 resultado = self._importar_arquivo_use_case.execute(
                     arquivo=arquivo,
                     nome_arquivo=nome_arquivo,
+                    usuario_id=usuario_id,
                     password=password
                 )
                 

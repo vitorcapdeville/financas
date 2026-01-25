@@ -12,7 +12,7 @@ Estrutura:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.interfaces.api.routers import configuracoes, importacao, regras, tags, transacoes
+from app.interfaces.api.routers import configuracoes, importacao, regras, tags, transacoes, usuarios
 
 app = FastAPI(
     title="Finanças Pessoais API",
@@ -35,6 +35,7 @@ app.include_router(tags.router)
 app.include_router(regras.router)
 app.include_router(configuracoes.router)
 app.include_router(importacao.router)
+app.include_router(usuarios.router)
 
 
 @app.get("/")

@@ -8,6 +8,7 @@ import {
   TagUpdate,
   Regra,
   RegraCreate,
+  Usuario,
 } from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -165,6 +166,7 @@ export const importacaoService = {
   async importarArquivos(
     arquivos: File[],
     passwords?: string[],
+    usuario_id?: number,
   ): Promise<{
     total_arquivos: number;
     arquivos_sucesso: number;
@@ -185,6 +187,9 @@ export const importacaoService = {
     arquivos.forEach((arquivo) => {
       formData.append("arquivos", arquivo);
     });
+
+    // Adicionar usuário (padrão: 1 = "Não definido")
+    formData.append("usuario_id", (usuario_id || 1).toString());
 
     // Adicionar senhas (formato: "senha1,senha2,senha3")
     if (passwords && passwords.length > 0) {
@@ -323,5 +328,14 @@ export const regrasService = {
         cache: "no-store",
       },
     );
+  },
+};
+
+// Serviço de usuários
+export const usuariosService = {
+  async listar(): Promise<Usuario[]> {
+    return handleFetch<Usuario[]>(`${API_URL}/usuarios`, {
+      cache: "no-store",
+    });
   },
 };

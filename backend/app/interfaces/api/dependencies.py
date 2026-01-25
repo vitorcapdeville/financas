@@ -26,6 +26,7 @@ from app.infrastructure.database.repositories.tag_repository import TagRepositor
 
 # Repositórios
 from app.infrastructure.database.repositories.transacao_repository import TransacaoRepository
+from app.infrastructure.database.repositories.usuario_repository import UsuarioRepository
 from app.infrastructure.database.session import get_session
 
 # ===== REPOSITÓRIOS =====
@@ -58,6 +59,18 @@ def get_regra_repository(
     yield RegraRepository(session)
 
 
+def get_usuario_repository(
+    session: Session = Depends(get_session)
+) -> Generator[UsuarioRepository, None, None]:
+    """Fornece repositório de usuários"""
+    yield UsuarioRepository(session)
+
+
+def get_db_session(session: Session = Depends(get_session)) -> Session:
+    """Fornece sessão do banco de dados"""
+    return session
+
+
 # ===== CASOS DE USO =====
 
 def get_criar_transacao_use_case(
@@ -70,10 +83,11 @@ def get_criar_transacao_use_case(
 def get_listar_transacoes_use_case(
     transacao_repo: TransacaoRepository = Depends(get_transacao_repository),
     config_repo: ConfiguracaoRepository = Depends(get_configuracao_repository),
-    tag_repo: TagRepository = Depends(get_tag_repository)
+    tag_repo: TagRepository = Depends(get_tag_repository),
+    usuario_repo: UsuarioRepository = Depends(get_usuario_repository)
 ) -> ListarTransacoesUseCase:
-    """Fornece caso de uso de listar transações"""
-    return ListarTransacoesUseCase(transacao_repo, config_repo, tag_repo)
+    """Fornece caso de uso de listar transações com tags e usuario"""
+    return ListarTransacoesUseCase(transacao_repo, config_repo, tag_repo, usuario_repo)
 
 
 def get_atualizar_transacao_use_case(
@@ -103,11 +117,12 @@ def get_listar_categorias_use_case(
 
 def get_obter_transacao_use_case(
     transacao_repo: TransacaoRepository = Depends(get_transacao_repository),
-    tag_repo: TagRepository = Depends(get_tag_repository)
+    tag_repo: TagRepository = Depends(get_tag_repository),
+    usuario_repo: UsuarioRepository = Depends(get_usuario_repository)
 ):
-    """Fornece caso de uso de obter transação com tags completas"""
+    """Fornece caso de uso de obter transação com tags completas e usuario"""
     from app.application.use_cases.obter_transacao import ObterTransacaoUseCase
-    return ObterTransacaoUseCase(transacao_repo, tag_repo)
+    return ObterTransacaoUseCase(transacao_repo, tag_repo, usuario_repo)
 
 
 def get_restaurar_valor_original_use_case(
@@ -236,11 +251,12 @@ def get_salvar_configuracao_use_case(
 def get_importar_multiplos_arquivos_use_case(
     transacao_repo: TransacaoRepository = Depends(get_transacao_repository),
     tag_repo: TagRepository = Depends(get_tag_repository),
-    regra_repo: RegraRepository = Depends(get_regra_repository)
+    regra_repo: RegraRepository = Depends(get_regra_repository),
+    usuario_repo: UsuarioRepository = Depends(get_usuario_repository)
 ):
     """Fornece caso de uso de importar arquivos (um ou múltiplos)"""
     from app.application.use_cases.importar_multiplos_arquivos import ImportarMultiplosArquivosUseCase
-    return ImportarMultiplosArquivosUseCase(transacao_repo, tag_repo, regra_repo)
+    return ImportarMultiplosArquivosUseCase(transacao_repo, tag_repo, regra_repo, usuario_repo)
 
 
 # Você pode adicionar mais factories de casos de uso aqui conforme necessário

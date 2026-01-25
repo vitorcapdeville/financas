@@ -62,14 +62,15 @@ class TestImportacaoRouter:
         # Importar usando endpoint unificado
         response = client.post(
             "/importacao",
-            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
+            files={"arquivos": ("transacoes.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
         assert response.status_code == 200
         data = response.json()
-        assert data["total_importado"] == 3
-        assert len(data["transacoes_ids"]) == 3
-        assert "importadas com sucesso" in data["mensagem"].lower()
+        assert data["total_transacoes_importadas"] == 3
+        assert data["arquivos_sucesso"] == 1
+        assert data["total_arquivos"] == 1
     
     def test_importar_extrato_csv_com_categoria(self, client):
         """Deve importar extrato CSV com categoria"""
@@ -81,12 +82,13 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
+            files={"arquivos": ("transacoes.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
         assert response.status_code == 200
         data = response.json()
-        assert data["total_importado"] == 2
+        assert data["total_transacoes_importadas"] == 2
         
         # Verificar que categorias foram salvas
         transacoes = client.get("/transacoes").json()
@@ -101,11 +103,14 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
+            files={"arquivos": ("transacoes.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
-        assert response.status_code == 400
-        assert "nenhuma linha válida" in response.json()["detail"].lower()
+        assert response.status_code == 200
+        data = response.json()
+        assert data["arquivos_erro"] == 1
+        assert "linha válida" in data["resultados"][0]["erro"].lower()
     
     def test_importar_extrato_csv_sem_colunas_obrigatorias(self, client):
         """Deve retornar erro se faltar colunas obrigatórias"""
@@ -117,12 +122,14 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
+            files={"arquivos": ("transacoes.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
-        assert response.status_code == 400
-        assert "coluna" in response.json()["detail"].lower()
-        assert "origem" in response.json()["detail"].lower()
+        assert response.status_code == 200
+        data = response.json()
+        assert data["arquivos_erro"] == 1
+        assert "coluna" in data["resultados"][0]["erro"].lower()
     
     def test_importar_extrato_csv_com_data_invalida(self, client):
         """Deve ignorar linhas com data inválida (comportamento tolerante)"""
@@ -134,13 +141,14 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
+            files={"arquivos": ("transacoes.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
         # Sistema ignora linha inválida e importa apenas a válida
         assert response.status_code == 200
         data = response.json()
-        assert data["total_importado"] == 1
+        assert data["total_transacoes_importadas"] == 1
     
     def test_importar_fatura_csv_valida(self, client):
         """Deve importar fatura de cartão CSV válida"""
@@ -153,13 +161,15 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("fatura.csv", arquivo, "text/csv")}
+            files={"arquivos": ("fatura.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
         assert response.status_code == 200
         data = response.json()
-        assert data["total_importado"] == 3
-        assert len(data["transacoes_ids"]) == 3
+        assert data["total_transacoes_importadas"] == 3
+        transacoes_ids = data["resultados"][0]["transacoes_ids"]
+        assert len(transacoes_ids) == 3
         
         # Verificar que todas são saídas
         transacoes = client.get("/transacoes").json()
@@ -176,12 +186,13 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("fatura.csv", arquivo, "text/csv")}
+            files={"arquivos": ("fatura.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
         assert response.status_code == 200
         data = response.json()
-        assert data["total_importado"] == 2
+        assert data["total_transacoes_importadas"] == 2
         
         # Verificar que valores foram convertidos
         transacoes = client.get("/transacoes").json()
@@ -199,12 +210,13 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("fatura.csv", arquivo, "text/csv")}
+            files={"arquivos": ("fatura.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
         assert response.status_code == 200
         data = response.json()
-        assert data["total_importado"] == 2
+        assert data["total_transacoes_importadas"] == 2
     
     def test_importar_arquivo_nao_csv(self, client):
         """Deve retornar erro para arquivo não CSV/Excel"""
@@ -214,10 +226,14 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("arquivo.txt", arquivo, "text/plain")}
+            files={"arquivos": ("arquivo.txt", arquivo, "text/plain")},
+            data={"usuario_id": "1"}
         )
         
-        assert response.status_code == 400
+        assert response.status_code == 200
+        data = response.json()
+        assert data["arquivos_erro"] == 1
+        assert "formato" in data["resultados"][0]["erro"].lower() or "não foi possível" in data["resultados"][0]["erro"].lower()
     
     def test_importar_extrato_com_regras_ativas(self, client):
         """Deve aplicar regras ativas durante importação"""
@@ -240,7 +256,8 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("extrato.csv", arquivo, "text/csv")}
+            files={"arquivos": ("extrato.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
         assert response.status_code == 200
@@ -260,12 +277,13 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("extrato.csv", arquivo, "text/csv")}
+            files={"arquivos": ("extrato.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
         assert response.status_code == 200
         data = response.json()
-        assert data["total_importado"] == 2
+        assert data["total_transacoes_importadas"] == 2
     
     def test_importar_arquivo_misto(self, client):
         """Deve importar arquivo com extrato e fatura mistos"""
@@ -279,12 +297,13 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
+            files={"arquivos": ("transacoes.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
         assert response.status_code == 200
         data = response.json()
-        assert data["total_importado"] == 4
+        assert data["total_transacoes_importadas"] == 4
     
     def test_importar_fatura_sem_data_fatura_retorna_erro(self, client):
         """Fatura sem data_fatura é importada normalmente (data_fatura é opcional)"""
@@ -295,12 +314,13 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("fatura.csv", arquivo, "text/csv")}
+            files={"arquivos": ("fatura.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
         assert response.status_code == 200
         data = response.json()
-        assert data["total_importado"] == 1
+        assert data["total_transacoes_importadas"] == 1
     
     def test_importar_origem_invalida_retorna_erro(self, client):
         """Deve retornar erro para origem inválida"""
@@ -311,11 +331,13 @@ class TestImportacaoRouter:
         
         response = client.post(
             "/importacao",
-            files={"arquivo": ("transacoes.csv", arquivo, "text/csv")}
+            files={"arquivos": ("transacoes.csv", arquivo, "text/csv")},
+            data={"usuario_id": "1"}
         )
         
-        assert response.status_code == 400
-        assert "origem" in response.json()["detail"].lower()
-        assert "fatura_cartao" in response.json()["detail"].lower()
-        assert "extrato_bancario" in response.json()["detail"].lower()
+        assert response.status_code == 200
+        data = response.json()
+        assert data["arquivos_erro"] == 1
+        assert "origem" in data["resultados"][0]["erro"].lower()
+        assert "fatura_cartao" in data["resultados"][0]["erro"].lower() or "extrato_bancario" in data["resultados"][0]["erro"].lower()
 

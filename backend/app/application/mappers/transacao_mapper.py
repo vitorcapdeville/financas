@@ -10,13 +10,14 @@ class TransacaoMapper:
     """Converte entre Transacao (domain) e TransacaoDTOs (application)"""
     
     @staticmethod
-    def to_dto(transacao: Transacao, tags=None) -> TransacaoDTO:
+    def to_dto(transacao: Transacao, tags=None, usuario=None) -> TransacaoDTO:
         """
         Converte entidade de domínio Transacao para DTO de saída.
         
         Args:
             transacao: Entidade de domínio
             tags: Lista opcional de TagDTOs associadas
+            usuario: UsuarioDTO opcional do responsável
             
         Returns:
             TransacaoDTO para transferência de dados
@@ -36,7 +37,9 @@ class TransacaoMapper:
             criado_em=transacao.criado_em,
             atualizado_em=transacao.atualizado_em,
             tag_ids=transacao.tag_ids,
-            tags=tags or []
+            tags=tags or [],
+            usuario_id=transacao.usuario_id,
+            usuario=usuario
         )
     
     @staticmethod
@@ -60,7 +63,8 @@ class TransacaoMapper:
             banco=dto.banco,
             observacoes=dto.observacoes,
             data_fatura=dto.data_fatura,
-            valor_original=dto.valor  # Valor original = valor inicial
+            valor_original=dto.valor,  # Valor original = valor inicial
+            usuario_id=dto.usuario_id
         )
     
     @staticmethod

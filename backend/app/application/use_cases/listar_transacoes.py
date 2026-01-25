@@ -5,11 +5,13 @@ Orquestra a lógica de listagem de transações com filtros
 from typing import List
 
 from app.application.dto.transacao_dto import FiltrosTransacaoDTO, TransacaoDTO
+from app.application.dto.usuario_dto import UsuarioDTO
 from app.application.mappers.tag_mapper import TagMapper
 from app.application.mappers.transacao_mapper import TransacaoMapper
 from app.domain.repositories.configuracao_repository import IConfiguracaoRepository
 from app.domain.repositories.tag_repository import ITagRepository
 from app.domain.repositories.transacao_repository import ITransacaoRepository
+from app.domain.repositories.usuario_repository import IUsuarioRepository
 
 
 class ListarTransacoesUseCase:
@@ -24,11 +26,13 @@ class ListarTransacoesUseCase:
         self,
         transacao_repository: ITransacaoRepository,
         configuracao_repository: IConfiguracaoRepository,
-        tag_repository: ITagRepository = None
+        tag_repository: ITagRepository = None,
+        usuario_repository: IUsuarioRepository = None
     ):
         self._transacao_repository = transacao_repository
         self._configuracao_repository = configuracao_repository
         self._tag_repository = tag_repository
+        self._usuario_repository = usuario_repository
     
     def execute(self, filtros: FiltrosTransacaoDTO) -> List[TransacaoDTO]:
         """
@@ -70,7 +74,20 @@ class ListarTransacoesUseCase:
                     if tag:
                         tags_completas.append(TagMapper.to_dto(tag))
             
-            # Converter transação para DTO com tags
-            dtos.append(TransacaoMapper.to_dto(transacao, tags=tags_completas))
+            # Carregar usuário se usuario_repository estiver disponível
+            usuario_dto = None
+            if self._usuario_repository:
+                usuario = self._usuario_repository.buscar_por_id(transacao.usuario_id)
+                if usuario and usuario.id is not None:
+                    usuario_dto = UsuarioDTO(
+                        id=usuario.id,
+                        nome=usuario.nome,
+                        cpf=usuario.cpf,
+                        criado_em=usuario.criado_em,
+                        atualizado_em=usuario.atualizado_em
+                    )
+            
+            # Converter transação para DTO com tags e usuario
+            dtos.append(TransacaoMapper.to_dto(transacao, tags=tags_completas, usuario=usuario_dto))
         
         return dtos

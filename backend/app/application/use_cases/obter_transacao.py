@@ -6,9 +6,11 @@ Camada de Aplicação - Lógica de Negócio
 
 from app.application.dto.tag_dto import TagDTO
 from app.application.dto.transacao_dto import TransacaoDTO
+from app.application.dto.usuario_dto import UsuarioDTO
 from app.application.exceptions.application_exceptions import EntityNotFoundException
 from app.domain.repositories.tag_repository import ITagRepository
 from app.domain.repositories.transacao_repository import ITransacaoRepository
+from app.domain.repositories.usuario_repository import IUsuarioRepository
 
 
 class ObterTransacaoUseCase:
@@ -28,10 +30,12 @@ class ObterTransacaoUseCase:
     def __init__(
         self,
         transacao_repository: ITransacaoRepository,
-        tag_repository: ITagRepository
+        tag_repository: ITagRepository,
+        usuario_repository: IUsuarioRepository
     ):
         self._transacao_repo = transacao_repository
         self._tag_repo = tag_repository
+        self._usuario_repo = usuario_repository
     
     def execute(self, transacao_id: int) -> TransacaoDTO:
         """
@@ -68,6 +72,18 @@ class ObterTransacaoUseCase:
                     atualizado_em=tag.atualizado_em
                 ))
         
+        # Buscar usuário responsável
+        usuario_dto = None
+        usuario = self._usuario_repo.buscar_por_id(transacao.usuario_id)
+        if usuario and usuario.id is not None:
+            usuario_dto = UsuarioDTO(
+                id=usuario.id,
+                nome=usuario.nome,
+                cpf=usuario.cpf,
+                criado_em=usuario.criado_em,
+                atualizado_em=usuario.atualizado_em
+            )
+        
         # Retorna DTO completo
         return TransacaoDTO(
             id=transacao.id,
@@ -84,5 +100,7 @@ class ObterTransacaoUseCase:
             criado_em=transacao.criado_em,
             atualizado_em=transacao.atualizado_em,
             tag_ids=transacao.tag_ids,
-            tags=tags_completas
+            tags=tags_completas,
+            usuario_id=transacao.usuario_id,
+            usuario=usuario_dto
         )

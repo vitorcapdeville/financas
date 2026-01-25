@@ -10,6 +10,7 @@ from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.infrastructure.database.models.tag_model import TransacaoTagModel
+    from app.infrastructure.database.models.usuario_model import UsuarioModel
 
 
 class TransacaoModel(SQLModel, table=True):
@@ -37,11 +38,15 @@ class TransacaoModel(SQLModel, table=True):
     criado_em: datetime = Field(default_factory=datetime.now)
     atualizado_em: datetime = Field(default_factory=datetime.now)
     
-    # Relacionamento com tags (CASCADE DELETE)
+    # FK para usuário
+    usuario_id: int = Field(foreign_key="usuario.id", description="ID do usuário responsável")
+    
+    # Relacionamentos
     tags: List["TransacaoTagModel"] = Relationship(
         back_populates="transacao",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
+    usuario: Optional["UsuarioModel"] = Relationship(back_populates="transacoes")
     
     @field_validator('data_fatura')
     @classmethod

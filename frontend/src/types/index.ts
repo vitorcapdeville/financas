@@ -24,6 +24,14 @@ export interface TagUpdate {
   descricao?: string;
 }
 
+export interface Usuario {
+  id: number;
+  nome: string;
+  cpf?: string;
+  criado_em: string;
+  atualizado_em: string;
+}
+
 export interface Transacao {
   id: number;
   data: string;
@@ -39,6 +47,8 @@ export interface Transacao {
   criado_em: string;
   atualizado_em: string;
   tags: Tag[];
+  usuario_id: number;
+  usuario?: Usuario; // Objeto usuario completo
 }
 
 export interface TransacaoCreate {
@@ -51,6 +61,7 @@ export interface TransacaoCreate {
   banco?: string;
   observacoes?: string;
   data_fatura?: string;
+  usuario_id?: number; // Padrão: 1 ("Não definido")
 }
 
 export interface TransacaoUpdate {

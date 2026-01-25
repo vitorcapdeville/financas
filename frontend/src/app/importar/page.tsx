@@ -1,72 +1,34 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { importacaoService } from "@/services/api.service";
+import { importacaoService, usuariosService } from "@/services/api.service";
 import { toast } from "react-hot-toast";
-
-interface ArquivoComSenha {
-  arquivo: File;
-  senha: string;
-  requerSenha: boolean;
-  pessoa?: string; // Nome da pessoa extraído do arquivo
-}
+import { Usuario } from "@/types";
 
 export default function ImportarPage() {
   const [uploading, setUploading] = useState(false);
-  const [arquivos, setArquivos] = useState<ArquivoComSenha[]>([]);
-  const [senhasPorPessoa, setSenhasPorPessoa] = useState<Record<string, string>>({});
+  const [arquivos, setArquivos] = useState<File[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState<number>(1); // Padrão: "Não definido"
 
-  // Extrair nome da pessoa do arquivo BTG
-  const extrairNomePessoa = (nomeArquivo: string): string | null => {
-    // Padrão: YYYY-MM-DD_Fatura_NOME_DA_PESSOA_NUMERO_BTG.xlsx
-    const match = nomeArquivo.match(/^\d{4}-\d{2}-\d{2}_Fatura_(.+?)_\d+_BTG/i);
-    return match ? match[1] : null;
-  };
-
-  // Agrupar arquivos por pessoa
-  const arquivosPorPessoa = useMemo(() => {
-    const grupos: Record<string, ArquivoComSenha[]> = {};
-    
-    arquivos.forEach((item) => {
-      if (item.pessoa) {
-        if (!grupos[item.pessoa]) {
-          grupos[item.pessoa] = [];
-        }
-        grupos[item.pessoa].push(item);
+  // Carregar lista de usuários
+  useEffect(() => {
+    const carregarUsuarios = async () => {
+      try {
+        const lista = await usuariosService.listar();
+        setUsuarios(lista);
+      } catch (error) {
+        console.error("Erro ao carregar usuários:", error);
+        toast.error("Erro ao carregar lista de usuários");
       }
-    });
-    
-    return grupos;
-  }, [arquivos]);
+    };
+    carregarUsuarios();
+  }, []);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-
-    const novosArquivos = files.map((file) => {
-      // Detectar se é fatura BTG pelo nome
-      const isBTGFatura = /^\d{4}-\d{2}-\d{2}_Fatura_.+_\d+_BTG/i.test(
-        file.name,
-      );
-      
-      const pessoa = isBTGFatura ? extrairNomePessoa(file.name) : null;
-
-      return {
-        arquivo: file,
-        senha: "",
-        requerSenha: isBTGFatura,
-        pessoa: pessoa || undefined,
-      };
-    });
-
-    setArquivos(novosArquivos);
-  };
-
-  const atualizarSenhaPessoa = (pessoa: string, senha: string) => {
-    setSenhasPorPessoa((prev) => ({
-      ...prev,
-      [pessoa]: senha,
-    }));
+    setArquivos(files);
   };
 
   const removerArquivo = (index: number) => {
@@ -85,32 +47,13 @@ export default function ImportarPage() {
     event.preventDefault();
     if (arquivos.length === 0) return;
 
-    // Validar senhas obrigatórias por pessoa
-    const pessoasSemSenha = Object.keys(arquivosPorPessoa).filter(
-      (pessoa) => !senhasPorPessoa[pessoa]
-    );
-    
-    if (pessoasSemSenha.length > 0) {
-      toast.error(`Preencha as senhas para: ${pessoasSemSenha.join(", ")}`);
-      return;
-    }
-
     try {
       setUploading(true);
 
-      const files = arquivos.map((item) => item.arquivo);
-      
-      // Aplicar senha da pessoa a cada arquivo
-      const passwords = arquivos.map((item) => {
-        if (item.pessoa && senhasPorPessoa[item.pessoa]) {
-          return senhasPorPessoa[item.pessoa];
-        }
-        return "";
-      });
-
       const resultado = await importacaoService.importarArquivos(
-        files,
-        passwords,
+        arquivos,
+        undefined, // Não envia senhas - backend usa CPF automaticamente
+        usuarioSelecionado,
       );
 
       // Mostrar resultados
@@ -134,7 +77,6 @@ export default function ImportarPage() {
       // Limpar apenas os arquivos que tiveram sucesso
       if (sucessos.length === arquivos.length) {
         setArquivos([]);
-        setSenhasPorPessoa({});
         const fileInput = document.getElementById(
           "file-input",
         ) as HTMLInputElement;
@@ -143,7 +85,7 @@ export default function ImportarPage() {
         // Remover apenas os bem-sucedidos
         const nomesSuccesso = sucessos.map((s) => s.nome_arquivo);
         setArquivos((prev) =>
-          prev.filter((item) => !nomesSuccesso.includes(item.arquivo.name)),
+          prev.filter((arquivo) => !nomesSuccesso.includes(arquivo.name)),
         );
       }
     } catch (error: any) {
@@ -200,6 +142,32 @@ export default function ImportarPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Seletor de Usuário */}
+          <div>
+            <label className="block mb-2 text-sm font-semibold text-[#0f3d3e]">
+              Usuário Responsável
+            </label>
+            <select
+              value={usuarioSelecionado}
+              onChange={(e) => setUsuarioSelecionado(Number(e.target.value))}
+              disabled={uploading}
+              className="w-full px-4 py-3 rounded-xl border-2 border-[#156064]/30
+                focus:border-[#156064] focus:outline-none transition-all
+                disabled:opacity-50 disabled:cursor-not-allowed
+                text-[#2d2d2d] font-medium bg-white shadow-sm
+                hover:border-[#156064]/50"
+            >
+              {usuarios.map((usuario) => (
+                <option key={usuario.id} value={usuario.id}>
+                  {usuario.nome}
+                </option>
+              ))}
+            </select>
+            <p className="mt-2 text-xs text-[#8b8378]">
+              Todas as transações importadas serão associadas a este usuário
+            </p>
+          </div>
+
           <div>
             <label className="block">
               <input
@@ -230,170 +198,60 @@ export default function ImportarPage() {
                 Arquivos Selecionados ({arquivos.length})
               </h3>
 
-              {/* Arquivos que requerem senha (agrupados por pessoa) */}
-              {Object.keys(arquivosPorPessoa).length > 0 && (
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-[#8b8378] uppercase tracking-wide">
-                    Faturas BTG (por pessoa)
-                  </h4>
-                  
-                  {Object.entries(arquivosPorPessoa).map(([pessoa, arquivosDaPessoa]) => (
-                    <div
-                      key={pessoa}
-                      className="bg-gradient-to-br from-[#faf8f5] to-[#f5f0e8] border-2 border-[#b8860b]/30 rounded-xl p-5 shadow-sm"
-                    >
-                      {/* Nome da pessoa e campo de senha */}
-                      <div className="mb-4 pb-4 border-b border-[#d4c5b9]">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#b8860b] to-[#d4af37] flex items-center justify-center">
-                            <span className="text-white text-lg">👤</span>
-                          </div>
-                          <div className="flex-1">
-                            <h5 className="font-bold text-[#0f3d3e] text-lg">{pessoa}</h5>
-                            <p className="text-xs text-[#8b8378]">
-                              {arquivosDaPessoa.length} fatura{arquivosDaPessoa.length > 1 ? "s" : ""}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <input
-                          type="password"
-                          value={senhasPorPessoa[pessoa] || ""}
-                          onChange={(e) => atualizarSenhaPessoa(pessoa, e.target.value)}
-                          placeholder="Senha das faturas desta pessoa"
-                          disabled={uploading}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-[#b8860b]/40
-                            focus:border-[#b8860b] focus:outline-none transition-colors
-                            disabled:opacity-50 disabled:cursor-not-allowed
-                            text-[#2d2d2d] placeholder:text-[#8b8378] font-medium
-                            bg-white shadow-sm"
-                          required
-                        />
-                      </div>
-
-                      {/* Lista de arquivos desta pessoa */}
-                      <div className="space-y-2">
-                        {arquivosDaPessoa.map((item, idx) => {
-                          const indexGlobal = arquivos.findIndex(a => a.arquivo === item.arquivo);
-                          return (
-                            <div
-                              key={idx}
-                              className="flex items-center gap-3 bg-white/60 rounded-lg p-3 hover:bg-white/80 transition-colors"
-                            >
-                              <svg
-                                className="w-4 h-4 text-[#156064] flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                />
-                              </svg>
-                              <span className="text-sm text-[#2d2d2d] break-all flex-1">
-                                {item.arquivo.name}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => removerArquivo(indexGlobal)}
-                                disabled={uploading}
-                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors
-                                  disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                                aria-label="Remover arquivo"
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Outros arquivos (sem senha) */}
-              {arquivos.filter(item => !item.pessoa).length > 0 && (
-                <div className="space-y-3">
-                  {Object.keys(arquivosPorPessoa).length > 0 && (
-                    <h4 className="text-sm font-semibold text-[#8b8378] uppercase tracking-wide">
-                      Outros Arquivos
-                    </h4>
-                  )}
-                  
-                  {arquivos.map((item, index) => {
-                    if (item.pessoa) return null;
-                    
-                    return (
-                      <div
-                        key={index}
-                        className="bg-[#faf8f5] border-2 border-[#d4c5b9] rounded-xl p-4"
-                      >
-                        <div className="flex items-start gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <svg
-                                className="w-5 h-5 text-[#156064]"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                />
-                              </svg>
-                              <span className="font-semibold text-[#2d2d2d] break-all">
-                                {item.arquivo.name}
-                              </span>
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => removerArquivo(index)}
-                            disabled={uploading}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors
-                              disabled:opacity-50 disabled:cursor-not-allowed"
-                            aria-label="Remover arquivo"
+              <div className="space-y-3">
+                {arquivos.map((arquivo, index) => (
+                  <div
+                    key={index}
+                    className="bg-[#faf8f5] border-2 border-[#d4c5b9] rounded-xl p-4"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-[#156064]"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                           >
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          </button>
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                          <span className="font-semibold text-[#2d2d2d] break-all">
+                            {arquivo.name}
+                          </span>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+
+                      <button
+                        type="button"
+                        onClick={() => removerArquivo(index)}
+                        disabled={uploading}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors
+                          disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Remover arquivo"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -487,15 +345,13 @@ export default function ImportarPage() {
                   <span className="text-white text-sm">�</span>
                 </div>
                 <div className="flex-1">
-                  <strong className="block mb-2">
-                    Fatura BTG (requer senha):
-                  </strong>
+                  <strong className="block mb-2">Fatura BTG:</strong>
                   <code className="block bg-[#faf8f5] px-3 py-2 rounded-lg text-xs border border-[#d4c5b9] font-mono mb-2">
                     YYYY-MM-DD_Fatura_NOME_NNNN_BTG.xlsx
                   </code>
                   <span className="text-xs text-[#8b8378] italic">
-                    O campo de senha aparecerá automaticamente ao selecionar
-                    este tipo de arquivo
+                    A senha do arquivo é obtida automaticamente do CPF do
+                    usuário selecionado
                   </span>
                 </div>
               </li>

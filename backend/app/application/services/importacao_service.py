@@ -17,6 +17,7 @@ from app.domain.entities.transacao import Transacao
 from app.domain.repositories.regra_repository import IRegraRepository
 from app.domain.repositories.tag_repository import ITagRepository
 from app.domain.repositories.transacao_repository import ITransacaoRepository
+from app.domain.repositories.usuario_repository import IUsuarioRepository
 from app.domain.value_objects.tipo_transacao import TipoTransacao
 
 
@@ -34,11 +35,25 @@ class ImportacaoService:
         self,
         transacao_repo: ITransacaoRepository,
         tag_repo: ITagRepository,
-        regra_repo: IRegraRepository
+        regra_repo: IRegraRepository,
+        usuario_repo: IUsuarioRepository,
+        usuario_id: int = 1  # Padrão: "Não definido"
     ):
         self._transacao_repo = transacao_repo
         self._tag_repo = tag_repo
         self._regra_repo = regra_repo
+        self._usuario_repo = usuario_repo
+        self._usuario_id = usuario_id
+    
+    def obter_cpf_usuario(self) -> str | None:
+        """
+        Obtém o CPF do usuário associado (usado como senha para faturas BTG).
+        
+        Returns:
+            CPF do usuário ou None se não cadastrado
+        """
+        usuario = self._usuario_repo.buscar_por_id(self._usuario_id)
+        return usuario.cpf if usuario else None
     
     def importar(self, df: pd.DataFrame) -> ResultadoImportacaoDTO:
         """
@@ -127,7 +142,8 @@ class ImportacaoService:
             categoria=categoria,
             origem=origem,
             banco=banco,
-            data_fatura=data_fatura
+            data_fatura=data_fatura,
+            usuario_id=self._usuario_id
         ) 
     
     def _garantir_tag_rotina(self) -> Tag:

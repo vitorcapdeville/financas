@@ -1,13 +1,9 @@
-from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
-from alembic import context
-
 # Importar configurações do projeto
 import sys
+from logging.config import fileConfig
 from pathlib import Path
+
+from alembic import context
 
 # Adicionar o diretório raiz ao path para importar os módulos
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -31,11 +27,12 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 # Importar todos os modelos SQLModel da nova estrutura (Clean Architecture)
-from sqlmodel import SQLModel
-from app.infrastructure.database.models.transacao_model import TransacaoModel  # noqa: F401
 from app.infrastructure.database.models.configuracao_model import ConfiguracaoModel  # noqa: F401
-from app.infrastructure.database.models.tag_model import TagModel, TransacaoTagModel  # noqa: F401
 from app.infrastructure.database.models.regra_model import RegraModel, RegraTagModel  # noqa: F401
+from app.infrastructure.database.models.tag_model import TagModel, TransacaoTagModel  # noqa: F401
+from app.infrastructure.database.models.transacao_model import TransacaoModel  # noqa: F401
+from app.infrastructure.database.models.usuario_model import UsuarioModel  # noqa: F401
+from sqlmodel import SQLModel
 
 target_metadata = SQLModel.metadata
 

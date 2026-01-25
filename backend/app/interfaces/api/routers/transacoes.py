@@ -43,6 +43,7 @@ from app.interfaces.api.schemas.request_response import (
     TransacaoCreateRequest,
     TransacaoResponse,
     TransacaoUpdateRequest,
+    UsuarioResponse,
 )
 
 router = APIRouter(prefix="/transacoes", tags=["Transações"])
@@ -71,8 +72,10 @@ def criar_transacao(
             tipo=TipoTransacao(request.tipo),
             categoria=request.categoria,
             origem=request.origem,
+            banco=request.banco,
             observacoes=request.observacoes,
-            data_fatura=request.data_fatura
+            data_fatura=request.data_fatura,
+            usuario_id=request.usuario_id
         )
         
         # Executa caso de uso
@@ -375,6 +378,17 @@ def _dto_to_response(dto: TransacaoDTO) -> TransacaoResponse:
         for tag in dto.tags
     ]
     
+    # Converte UsuarioDTO → UsuarioResponse (se presente)
+    usuario_response = None
+    if dto.usuario:
+        usuario_response = UsuarioResponse(
+            id=dto.usuario.id,
+            nome=dto.usuario.nome,
+            cpf=dto.usuario.cpf,
+            criado_em=dto.usuario.criado_em,
+            atualizado_em=dto.usuario.atualizado_em
+        )
+    
     return TransacaoResponse(
         id=dto.id,
         data=dto.data,
@@ -390,5 +404,7 @@ def _dto_to_response(dto: TransacaoDTO) -> TransacaoResponse:
         criado_em=dto.criado_em,
         atualizado_em=dto.atualizado_em,
         tag_ids=dto.tag_ids,
-        tags=tags_response
+        tags=tags_response,
+        usuario_id=dto.usuario_id,
+        usuario=usuario_response
     )

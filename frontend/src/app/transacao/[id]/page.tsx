@@ -155,6 +155,25 @@ export default async function TransacaoPage({
 
             <div>
               <label className="block text-xs font-semibold text-[#8b8378] mb-2 uppercase tracking-wider">
+                Responsável
+              </label>
+              <div className="inline-flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                  style={{
+                    background: "linear-gradient(135deg, #b8860b, #d4af37)",
+                  }}
+                >
+                  {transacao.usuario?.nome?.charAt(0).toUpperCase() || "?"}
+                </div>
+                <p className="text-lg text-[#2d2d2d] font-medium">
+                  {transacao.usuario?.nome || "Não definido"}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#8b8378] mb-2 uppercase tracking-wider">
                 Origem
               </label>
               <p className="text-lg text-[#2d2d2d] font-medium">

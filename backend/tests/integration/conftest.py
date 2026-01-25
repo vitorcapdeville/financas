@@ -20,6 +20,7 @@ def session():
     from app.infrastructure.database.models.regra_model import RegraModel  # noqa: F401
     from app.infrastructure.database.models.tag_model import TagModel  # noqa: F401
     from app.infrastructure.database.models.transacao_model import TransacaoModel  # noqa: F401
+    from app.infrastructure.database.models.usuario_model import UsuarioModel  # noqa: F401
 
     # Criar engine
     engine = create_engine(
@@ -33,6 +34,20 @@ def session():
 
     # Criar sessão
     with Session(engine) as test_session:
+        # Criar usuário padrão "Não definido" (id=1)
+        from datetime import datetime
+
+        from app.infrastructure.database.models.usuario_model import UsuarioModel
+        usuario_padrao = UsuarioModel(
+            id=1,
+            nome="Não definido",
+            cpf=None,
+            criado_em=datetime.now(),
+            atualizado_em=datetime.now()
+        )
+        test_session.add(usuario_padrao)
+        test_session.commit()
+        
         yield test_session
 
     # Limpar

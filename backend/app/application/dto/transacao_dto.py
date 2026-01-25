@@ -10,6 +10,7 @@ from app.domain.value_objects.tipo_transacao import TipoTransacao
 
 if TYPE_CHECKING:
     from app.application.dto.tag_dto import TagDTO
+    from app.application.dto.usuario_dto import UsuarioDTO
 
 
 @dataclass
@@ -24,6 +25,7 @@ class CriarTransacaoDTO:
     banco: Optional[str] = None
     observacoes: Optional[str] = None
     data_fatura: Optional[date] = None
+    usuario_id: int = 1  # ID do usuário responsável (padrão: "Não definido")
 
 
 @dataclass
@@ -54,6 +56,8 @@ class TransacaoDTO:
     atualizado_em: datetime = field(default_factory=datetime.now)
     tag_ids: List[int] = field(default_factory=list)
     tags: List["TagDTO"] = field(default_factory=list)  # Objetos Tag completos
+    usuario_id: int = 1  # ID do usuário responsável
+    usuario: Optional["UsuarioDTO"] = None  # Objeto Usuario completo
 
 
 @dataclass

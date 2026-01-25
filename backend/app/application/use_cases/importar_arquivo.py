@@ -18,6 +18,7 @@ from app.application.services.importacao_service import ImportacaoService
 from app.domain.repositories.regra_repository import IRegraRepository
 from app.domain.repositories.tag_repository import ITagRepository
 from app.domain.repositories.transacao_repository import ITransacaoRepository
+from app.domain.repositories.usuario_repository import IUsuarioRepository
 from app.infrastructure.parsers.extrato_parser_registry import obter_registry
 
 
@@ -34,20 +35,21 @@ class ImportarArquivoUseCase:
         self,
         transacao_repo: ITransacaoRepository,
         tag_repo: ITagRepository,
-        regra_repo: IRegraRepository
+        regra_repo: IRegraRepository,
+        usuario_repo: IUsuarioRepository
     ):
         self._detector = DetectorTipoArquivo()
         self._parser_registry = obter_registry()
-        self._service = ImportacaoService(
-            transacao_repo=transacao_repo,
-            tag_repo=tag_repo,
-            regra_repo=regra_repo
-        )
+        self._transacao_repo = transacao_repo
+        self._tag_repo = tag_repo
+        self._regra_repo = regra_repo
+        self._usuario_repo = usuario_repo
     
     def execute(
         self,
         arquivo: BinaryIO,
         nome_arquivo: str,
+        usuario_id: int = 1,
         password: str | None = None
     ) -> ResultadoImportacaoDTO:
         """
@@ -56,6 +58,7 @@ class ImportarArquivoUseCase:
         Args:
             arquivo: Conteúdo do arquivo (bytes)
             nome_arquivo: Nome do arquivo
+            usuario_id: ID do usuário responsável pelas transações
             password: Senha para arquivos protegidos (opcional)
             
         Returns:
@@ -64,6 +67,19 @@ class ImportarArquivoUseCase:
         Raises:
             ValidationException: Se tipo não suportado ou dados inválidos
         """
+        # Criar service com usuario_id
+        service = ImportacaoService(
+            transacao_repo=self._transacao_repo,
+            tag_repo=self._tag_repo,
+            regra_repo=self._regra_repo,
+            usuario_repo=self._usuario_repo,
+            usuario_id=usuario_id
+        )
+        
+        # Se não foi fornecida senha, tentar obter CPF do usuário
+        if password is None:
+            password = service.obter_cpf_usuario()
+        
         # 1. Detectar qual parser usar pelo nome
         parser_id = self._detector.detectar(nome_arquivo)
         
@@ -80,7 +96,7 @@ class ImportarArquivoUseCase:
             )
         
         # 4. Service processa DataFrame e salva transações
-        resultado = self._service.importar(df_normalizado)
+        resultado = service.importar(df_normalizado)
         
         # Adicionar contexto na mensagem
         resultado.mensagem = f"{resultado.mensagem} (parser: {parser_id})"

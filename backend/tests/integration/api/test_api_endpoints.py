@@ -121,6 +121,8 @@ class TestTransacoesAPI:
         response = client.post("/transacoes", json=transacao_data)
         
         # Assert
+        if response.status_code != 201:
+            print(f"Error response: {response.text}")
         assert response.status_code == 201
         data = response.json()
         assert data["descricao"] == "Teste integração"

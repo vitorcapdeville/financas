@@ -26,7 +26,7 @@ export default async function TransacoesPage(props: TransacoesPageProps) {
   const { data_inicio, data_fim } = calcularPeriodoCustomizado(
     mes,
     ano,
-    diaInicio
+    diaInicio,
   );
 
   // Constrói query string preservando período, diaInicio, criterio, tags, sem_tags e origem
@@ -183,6 +183,16 @@ export default async function TransacoesPage(props: TransacoesPageProps) {
                               {formatarData(transacao.data)}
                             </span>
 
+                            {transacao.usuario && (
+                              <>
+                                <span className="text-[#d4c5b9]">•</span>
+                                <span className="flex items-center gap-1.5">
+                                  <span className="text-xs">👤</span>
+                                  {transacao.usuario.nome}
+                                </span>
+                              </>
+                            )}
+
                             {transacao.data_fatura && (
                               <>
                                 <span className="text-[#d4c5b9]">•</span>
@@ -203,8 +213,8 @@ export default async function TransacoesPage(props: TransacoesPageProps) {
                               {transacao.origem === "manual"
                                 ? "✍️ Manual"
                                 : transacao.origem === "extrato_bancario"
-                                ? "🏦 Extrato"
-                                : "💳 Fatura"}
+                                  ? "🏦 Extrato"
+                                  : "💳 Fatura"}
                             </span>
                           </div>
 

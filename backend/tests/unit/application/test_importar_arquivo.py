@@ -16,17 +16,24 @@ def mock_repos():
     return {
         'transacao_repo': Mock(),
         'tag_repo': Mock(),
-        'regra_repo': Mock()
+        'regra_repo': Mock(),
+        'usuario_repo': Mock()
     }
 
 
 @pytest.fixture
 def use_case(mock_repos):
     """Cria instância do use case com mocks"""
+    # Mock usuario_repo retorna CPF padrão
+    mock_usuario = Mock()
+    mock_usuario.cpf = "12345678901"
+    mock_repos['usuario_repo'].buscar_por_id.return_value = mock_usuario
+    
     return ImportarArquivoUseCase(
         transacao_repo=mock_repos['transacao_repo'],
         tag_repo=mock_repos['tag_repo'],
-        regra_repo=mock_repos['regra_repo']
+        regra_repo=mock_repos['regra_repo'],
+        usuario_repo=mock_repos['usuario_repo']
     )
 
 

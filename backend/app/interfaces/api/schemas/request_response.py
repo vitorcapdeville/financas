@@ -20,6 +20,7 @@ class TransacaoCreateRequest(BaseModel):
     banco: Optional[str] = None
     observacoes: Optional[str] = None
     data_fatura: Optional[date] = None
+    usuario_id: int = 1  # ID do usuário responsável (padrão: "Não definido")
 
 
 class TransacaoUpdateRequest(BaseModel):
@@ -48,6 +49,8 @@ class TransacaoResponse(BaseModel):
     atualizado_em: datetime
     tag_ids: List[int] = []
     tags: List["TagResponse"] = []  # Objetos Tag completos
+    usuario_id: int  # ID do usuário responsável
+    usuario: Optional["UsuarioResponse"] = None  # Objeto Usuario completo
     
     class Config:
         from_attributes = True
@@ -152,7 +155,18 @@ class RegraResponse(BaseModel):
         from_attributes = True
 
 
+# ===== USUARIO =====
 
+class UsuarioResponse(BaseModel):
+    """Schema para response de usuário"""
+    id: int
+    nome: str
+    cpf: Optional[str]
+    criado_em: datetime
+    atualizado_em: datetime
+    
+    class Config:
+        from_attributes = True
 
 
 # ===== IMPORTAÇÃO =====
