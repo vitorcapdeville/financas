@@ -60,7 +60,9 @@ class TransacaoRepository(ITransacaoRepository):
         tipo: Optional[TipoTransacao] = None,
         tag_ids: Optional[List[int]] = None,
         sem_tags: bool = False,
-        criterio_data: str = "data_transacao"
+        sem_categoria: bool = False,
+        criterio_data: str = "data_transacao",
+        usuario_id: Optional[int] = None
     ) -> List[Transacao]:
         """Lista transações com filtros"""
         query = select(TransacaoModel)
@@ -79,6 +81,8 @@ class TransacaoRepository(ITransacaoRepository):
         # Filtro de categoria
         if categoria:
             query = query.where(TransacaoModel.categoria == categoria)
+        elif sem_categoria:
+            query = query.where(TransacaoModel.categoria.is_(None))
         
         # Filtro de tipo
         if tipo:
@@ -87,24 +91,21 @@ class TransacaoRepository(ITransacaoRepository):
         # Filtro de tags (OR lógico)
         if tag_ids or sem_tags:
             query = query.outerjoin(TransacaoTagModel)
-            
             conditions = []
-            
             # Adiciona condição para tags específicas
             if tag_ids:
                 conditions.append(TransacaoTagModel.tag_id.in_(tag_ids))
-            
             # Adiciona condição para transações sem tags
             if sem_tags:
                 conditions.append(TransacaoTagModel.tag_id.is_(None))
-            
             # Aplica OR entre as condições
             if conditions:
                 query = query.where(or_(*conditions)).distinct()
-        
+        # Filtro por usuário
+        if usuario_id is not None:
+            query = query.where(TransacaoModel.usuario_id == usuario_id)
         # Ordena por data DESC
         query = query.order_by(TransacaoModel.data.desc())
-        
         models = self._session.exec(query).all()
         return [self._to_entity(m) for m in models]
     

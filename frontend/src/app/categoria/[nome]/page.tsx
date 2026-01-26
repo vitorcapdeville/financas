@@ -1,4 +1,5 @@
-import { transacoesService } from "@/services/api.service";
+import { transacoesService, usuariosService } from "@/services/api.service";
+import FiltroUsuario from "@/components/FiltroUsuario";
 import { formatarData, formatarMoeda } from "@/utils/format";
 import {
   calcularPeriodoCustomizado,
@@ -19,6 +20,7 @@ interface CategoriaPageProps {
     criterio?: string;
     tags?: string;
     sem_tags?: string;
+    usuario_id?: string;
   }>;
 }
 
@@ -26,6 +28,10 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
   // Next.js 16: params e searchParams são Promises que precisam ser awaited
   const params = await props.params;
   const searchParams = await props.searchParams;
+  const usuarios = await usuariosService.listar();
+  const usuarioIdSelecionado = searchParams.usuario_id
+    ? Number(searchParams.usuario_id)
+    : undefined;
   const categoria = decodeURIComponent(params.nome);
   const tipo = searchParams.tipo;
   const { periodo, mes, ano, diaInicio, criterio } =
@@ -33,7 +39,7 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
   const { data_inicio, data_fim } = calcularPeriodoCustomizado(
     mes,
     ano,
-    diaInicio
+    diaInicio,
   );
 
   // Constrói query string preservando período, diaInicio, criterio, tags, sem_tags e origem
@@ -43,6 +49,8 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
   if (criterio) queryParams.set("criterio", criterio);
   if (searchParams.tags) queryParams.set("tags", searchParams.tags);
   if (searchParams.sem_tags) queryParams.set("sem_tags", searchParams.sem_tags);
+  if (usuarioIdSelecionado)
+    queryParams.set("usuario_id", usuarioIdSelecionado.toString());
   queryParams.set("origem", `categoria:${categoria}`);
   const queryString = queryParams.toString();
 
@@ -57,6 +65,8 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
       tags: searchParams.tags,
       sem_tags: searchParams.sem_tags === "true",
       criterio_data_transacao: criterio,
+      usuario_id: usuarioIdSelecionado,
+      sem_categoria: categoria === "Sem categoria",
     });
   } catch (error) {
     console.error("Erro ao carregar transações:", error);
@@ -76,7 +86,7 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
     const periodoAnterior = calcularPeriodoCustomizado(
       mesCalc,
       anoCalc,
-      diaInicio
+      diaInicio,
     );
     try {
       const transacoesMes = await transacoesService.listar({
@@ -119,8 +129,8 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
           {tipo === "entrada"
             ? "Entradas"
             : tipo === "saida"
-            ? "Saídas"
-            : "Transações"}{" "}
+              ? "Saídas"
+              : "Transações"}{" "}
           desta categoria
         </p>
       </div>
@@ -128,6 +138,13 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
       {/* Filtro de Período */}
       <div className="animate-fade-in-up delay-200">
         <FiltrosPeriodo />
+      </div>
+
+      <div className="animate-fade-in-up delay-200">
+        <FiltroUsuario
+          usuarios={usuarios}
+          usuarioIdSelecionado={usuarioIdSelecionado}
+        />
       </div>
 
       {/* Filtro de Tags */}
@@ -275,8 +292,8 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
                       {transacao.origem === "manual"
                         ? "Manual"
                         : transacao.origem === "extrato_bancario"
-                        ? "Extrato"
-                        : "Fatura"}
+                          ? "Extrato"
+                          : "Fatura"}
                     </p>
                   </div>
                 </div>

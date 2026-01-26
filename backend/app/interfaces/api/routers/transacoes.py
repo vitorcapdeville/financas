@@ -100,6 +100,8 @@ def listar_transacoes(
     tipo: Optional[str] = None,
     tags: Optional[str] = Query(None, description="IDs separados por vírgula"),
     sem_tags: bool = Query(False, description="Filtrar apenas transações sem tags"),
+    sem_categoria: bool = Query(False, description="Filtrar apenas transações sem categoria"),
+    usuario_id: Optional[int] = Query(None, description="Filtrar por ID do usuário"),
     use_case: ListarTransacoesUseCase = Depends(get_listar_transacoes_use_case)
 ):
     """
@@ -130,7 +132,9 @@ def listar_transacoes(
             categoria=categoria,
             tipo=tipo_enum,
             tag_ids=tag_ids,
-            sem_tags=sem_tags
+            sem_tags=sem_tags,
+            sem_categoria=sem_categoria,
+            usuario_id=usuario_id
         )
         
         # Executa caso de uso
@@ -167,6 +171,7 @@ def obter_resumo_mensal(
     data_fim: Optional[date] = None,
     tags: Optional[str] = Query(None, description="IDs separados por vírgula"),
     sem_tags: bool = Query(False, description="Filtrar apenas transações sem tags"),
+    usuario_id: Optional[int] = Query(None, description="Filtrar por ID do usuário"),
     use_case: ObterResumoMensalUseCase = Depends(get_obter_resumo_mensal_use_case)
 ):
     """
@@ -193,7 +198,8 @@ def obter_resumo_mensal(
             data_inicio=data_inicio,
             data_fim=data_fim,
             tag_ids=tag_ids,
-            sem_tags=sem_tags
+            sem_tags=sem_tags,
+            usuario_id=usuario_id
         )
         
         # Converter DTO → Response

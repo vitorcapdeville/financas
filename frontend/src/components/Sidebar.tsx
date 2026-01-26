@@ -19,11 +19,13 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const diaInicio = searchParams.get("diaInicio");
     const criterio = searchParams.get("criterio");
     const tags = searchParams.get("tags");
+    const usuario_id = searchParams.get("usuario_id");
 
     if (periodo) params.set("periodo", periodo);
     if (diaInicio) params.set("diaInicio", diaInicio);
     if (criterio) params.set("criterio", criterio);
     if (tags) params.set("tags", tags);
+    if (usuario_id) params.set("usuario_id", usuario_id);
 
     return params.toString();
   };

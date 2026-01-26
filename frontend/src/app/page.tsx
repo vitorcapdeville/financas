@@ -1,4 +1,5 @@
-import { transacoesService } from "@/services/api.service";
+import { transacoesService, usuariosService } from "@/services/api.service";
+import FiltroUsuario from "@/components/FiltroUsuario";
 import { formatarMoeda } from "@/utils/format";
 import {
   calcularPeriodoCustomizado,
@@ -15,18 +16,23 @@ interface HomeProps {
     criterio?: string;
     tags?: string;
     sem_tags?: string;
+    usuario_id?: string;
   }>;
 }
 
 export default async function Home(props: HomeProps) {
   // Next.js 16: searchParams é uma Promise que precisa ser awaited
   const searchParams = await props.searchParams;
+  const usuarios = await usuariosService.listar();
+  const usuarioIdSelecionado = searchParams.usuario_id
+    ? Number(searchParams.usuario_id)
+    : undefined;
   const { periodo, mes, ano, diaInicio, criterio } =
     extrairPeriodoDaURL(searchParams);
   const { data_inicio, data_fim } = calcularPeriodoCustomizado(
     mes,
     ano,
-    diaInicio
+    diaInicio,
   );
 
   // Constrói query string preservando período, diaInicio, criterio, tags e sem_tags
@@ -36,6 +42,8 @@ export default async function Home(props: HomeProps) {
   if (criterio) queryParams.set("criterio", criterio);
   if (searchParams.tags) queryParams.set("tags", searchParams.tags);
   if (searchParams.sem_tags) queryParams.set("sem_tags", searchParams.sem_tags);
+  if (usuarioIdSelecionado)
+    queryParams.set("usuario_id", usuarioIdSelecionado.toString());
   const queryString = queryParams.toString();
 
   // Busca dados no servidor
@@ -48,7 +56,8 @@ export default async function Home(props: HomeProps) {
       data_fim,
       searchParams.tags,
       searchParams.sem_tags === "true",
-      criterio
+      criterio,
+      usuarioIdSelecionado,
     );
   } catch (error) {
     console.error("Erro ao carregar resumo:", error);
@@ -72,6 +81,13 @@ export default async function Home(props: HomeProps) {
       {/* Filtros com animação */}
       <div className="animate-fade-in-up delay-100">
         <FiltrosPeriodo />
+      </div>
+
+      <div className="animate-fade-in-up delay-200">
+        <FiltroUsuario
+          usuarios={usuarios}
+          usuarioIdSelecionado={usuarioIdSelecionado}
+        />
       </div>
 
       {/* Filtro de Tags */}
@@ -223,7 +239,7 @@ export default async function Home(props: HomeProps) {
                       >
                         <Link
                           href={`/categoria/${encodeURIComponent(
-                            categoria
+                            categoria,
                           )}?tipo=entrada&${queryString}`}
                           className="flex justify-between items-center py-4 px-4 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-[#2d8659]/5 hover:to-transparent border-b border-[#d4c5b9]/30"
                         >
@@ -278,7 +294,7 @@ export default async function Home(props: HomeProps) {
                       >
                         <Link
                           href={`/categoria/${encodeURIComponent(
-                            categoria
+                            categoria,
                           )}?tipo=saida&${queryString}`}
                           className="flex justify-between items-center py-4 px-4 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-[#c44536]/5 hover:to-transparent border-b border-[#d4c5b9]/30"
                         >

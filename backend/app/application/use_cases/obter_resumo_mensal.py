@@ -35,7 +35,8 @@ class ObterResumoMensalUseCase:
         data_inicio: Optional[date] = None,
         data_fim: Optional[date] = None,
         tag_ids: Optional[List[int]] = None,
-        sem_tags: bool = False
+        sem_tags: bool = False,
+        usuario_id: Optional[int] = None
     ) -> ResumoMensalDTO:
         """
         Executa o caso de uso de resumo mensal.
@@ -75,7 +76,9 @@ class ObterResumoMensalUseCase:
             data_fim=data_fim,
             tag_ids=tag_ids,
             sem_tags=sem_tags,
-            criterio_data=criterio
+            sem_categoria=False,  # Nunca filtrar sem categoria no resumo
+            criterio_data=criterio,
+            usuario_id=usuario_id
         )
         
         # Agrupar por categoria e tipo

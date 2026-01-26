@@ -60,7 +60,9 @@ class ListarTransacoesUseCase:
             tipo=filtros.tipo,
             tag_ids=filtros.tag_ids,
             sem_tags=filtros.sem_tags,
-            criterio_data=criterio
+            sem_categoria=filtros.sem_categoria,
+            criterio_data=criterio,
+            usuario_id=filtros.usuario_id
         )
         
         # Converte para DTOs usando mapper

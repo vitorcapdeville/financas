@@ -1,4 +1,5 @@
-import { transacoesService } from "@/services/api.service";
+import { transacoesService, usuariosService } from "@/services/api.service";
+import FiltroUsuario from "@/components/FiltroUsuario";
 import { formatarData, formatarMoeda } from "@/utils/format";
 import {
   calcularPeriodoCustomizado,
@@ -15,12 +16,17 @@ interface TransacoesPageProps {
     criterio?: string;
     tags?: string;
     sem_tags?: string;
+    usuario_id?: string;
   }>;
 }
 
 export default async function TransacoesPage(props: TransacoesPageProps) {
   // Next.js 16: searchParams é uma Promise que precisa ser awaited
   const searchParams = await props.searchParams;
+  const usuarios = await usuariosService.listar();
+  const usuarioIdSelecionado = searchParams.usuario_id
+    ? Number(searchParams.usuario_id)
+    : undefined;
   const { periodo, mes, ano, diaInicio, criterio } =
     extrairPeriodoDaURL(searchParams);
   const { data_inicio, data_fim } = calcularPeriodoCustomizado(
@@ -36,6 +42,8 @@ export default async function TransacoesPage(props: TransacoesPageProps) {
   if (criterio) queryParams.set("criterio", criterio);
   if (searchParams.tags) queryParams.set("tags", searchParams.tags);
   if (searchParams.sem_tags) queryParams.set("sem_tags", searchParams.sem_tags);
+  if (usuarioIdSelecionado)
+    queryParams.set("usuario_id", usuarioIdSelecionado.toString());
   queryParams.set("origem", "transacoes");
   const queryString = queryParams.toString();
 
@@ -48,6 +56,7 @@ export default async function TransacoesPage(props: TransacoesPageProps) {
       tags: searchParams.tags,
       sem_tags: searchParams.sem_tags === "true",
       criterio_data_transacao: criterio,
+      usuario_id: usuarioIdSelecionado,
     });
   } catch (error) {
     console.error("Erro ao carregar transações:", error);
@@ -76,9 +85,17 @@ export default async function TransacoesPage(props: TransacoesPageProps) {
         </p>
       </header>
 
-      {/* Filtros */}
+      {/* Filtro de Período */}
       <div className="animate-fade-in-up delay-200">
         <FiltrosPeriodo />
+      </div>
+
+      {/* Filtros */}
+      <div className="animate-fade-in-up delay-200">
+        <FiltroUsuario
+          usuarios={usuarios}
+          usuarioIdSelecionado={usuarioIdSelecionado}
+        />
       </div>
 
       {/* Filtro de Tags */}

@@ -49,7 +49,7 @@ export default function FormEditarValor({
 
   const baseValor = valorOriginal ?? valorAtual;
   const valorNumerico = parseFloat(novoValor || "0");
-  const percentualAlteracao = ((valorNumerico - baseValor) / baseValor) * 100;
+  const percentualAlteracao = (valorNumerico / baseValor) * 100;
 
   useEffect(() => {
     // Inicializa o campo de descrição quando mudar para critério baseado em descrição
@@ -90,7 +90,7 @@ export default function FormEditarValor({
 
     if (
       criarRegra &&
-      criterio === CriterioTipo.DESCRICAO &&
+      (criterio === CriterioTipo.DESCRICAO_EXATA || criterio === CriterioTipo.DESCRICAO_CONTEM) &&
       !criterioValor.trim()
     ) {
       toast.error("Digite o valor do critério");

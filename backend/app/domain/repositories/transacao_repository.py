@@ -55,7 +55,9 @@ class ITransacaoRepository(ABC):
         tipo: Optional[TipoTransacao] = None,
         tag_ids: Optional[List[int]] = None,
         sem_tags: bool = False,
-        criterio_data: str = "data_transacao"
+        sem_categoria: bool = False,
+        criterio_data: str = "data_transacao",
+        usuario_id: Optional[int] = None
     ) -> List[Transacao]:
         """
         Lista transações com filtros opcionais.

@@ -51,7 +51,9 @@ export const transacoesService = {
     tipo?: string;
     tags?: string;
     sem_tags?: boolean;
+    sem_categoria?: boolean;
     criterio_data_transacao?: string;
+    usuario_id?: number;
   }): Promise<Transacao[]> {
     const searchParams = new URLSearchParams();
     if (params) {
@@ -114,6 +116,7 @@ export const transacoesService = {
     tags?: string,
     sem_tags?: boolean,
     criterio_data_transacao?: string,
+    usuario_id?: number,
   ): Promise<ResumoMensal> {
     const searchParams = new URLSearchParams();
 
@@ -135,6 +138,10 @@ export const transacoesService = {
 
     if (criterio_data_transacao) {
       searchParams.append("criterio_data_transacao", criterio_data_transacao);
+    }
+
+    if (usuario_id !== undefined) {
+      searchParams.append("usuario_id", usuario_id.toString());
     }
 
     const url = `${API_URL}/transacoes/resumo/mensal?${searchParams.toString()}`;
