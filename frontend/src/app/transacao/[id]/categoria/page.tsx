@@ -13,6 +13,9 @@ interface CategoriaPageProps {
     periodo?: string;
     diaInicio?: string;
     criterio?: string;
+    tags?: string;
+    usuario_id?: string;
+    sem_tags?: string;
   }>;
 }
 
@@ -23,7 +26,7 @@ export default async function CategoriaPage({
   // Next.js 16: params e searchParams são Promises
   const { id: idStr } = await params;
   const search = await searchParams;
-
+  console.log("Search Params:", search);
   const id = parseInt(idStr);
 
   // Constrói query string preservando período, diaInicio e criterio
@@ -31,6 +34,9 @@ export default async function CategoriaPage({
   if (search.periodo) queryParams.set("periodo", search.periodo);
   if (search.diaInicio) queryParams.set("diaInicio", search.diaInicio);
   if (search.criterio) queryParams.set("criterio", search.criterio);
+  if (search.tags) queryParams.set("tags", search.tags);
+  if (search.usuario_id) queryParams.set("usuario_id", search.usuario_id);
+  if (search.sem_tags) queryParams.set("sem_tags", search.sem_tags);
   const queryString = queryParams.toString();
 
   // Busca transação no servidor

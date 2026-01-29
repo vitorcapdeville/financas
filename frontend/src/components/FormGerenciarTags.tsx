@@ -37,7 +37,7 @@ export default function FormGerenciarTags({
   const [tagsSelecionadas, setTagsSelecionadas] = useState<number[]>([]);
   const [criarRegra, setCriarRegra] = useState(false);
   const [criterio, setCriterio] = useState<CriterioTipo>(
-    CriterioTipo.CATEGORIA
+    CriterioTipo.CATEGORIA,
   );
   const [nomeRegra, setNomeRegra] = useState("");
   const [criterioValor, setCriterioValor] = useState("");
@@ -47,7 +47,7 @@ export default function FormGerenciarTags({
   } | null>(null);
 
   const tagsDisponiveis = todasTags.filter(
-    (tag) => !tagsAtuais.some((t) => t.id === tag.id)
+    (tag) => !tagsAtuais.some((t) => t.id === tag.id),
   );
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export default function FormGerenciarTags({
     setTagsSelecionadas((prev) =>
       prev.includes(tagId)
         ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId]
+        : [...prev, tagId],
     );
   };
 
@@ -106,7 +106,8 @@ export default function FormGerenciarTags({
 
     if (
       criarRegra &&
-      criterio === CriterioTipo.DESCRICAO &&
+      (criterio === CriterioTipo.DESCRICAO_EXATA ||
+        criterio === CriterioTipo.DESCRICAO_CONTEM) &&
       !criterioValor.trim()
     ) {
       toast.error("Digite o valor do critério");
@@ -136,7 +137,7 @@ export default function FormGerenciarTags({
           });
 
           toast.success(
-            `${tagsSelecionadas.length} tag(s) adicionada(s) e regra criada!`
+            `${tagsSelecionadas.length} tag(s) adicionada(s) e regra criada!`,
           );
           setRegraParaAplicar({ id: regra.id, nome: regra.nome });
         } else {
@@ -156,10 +157,10 @@ export default function FormGerenciarTags({
     startTransition(async () => {
       try {
         const resultado = await aplicarRegraRetroativamenteAction(
-          regraParaAplicar.id
+          regraParaAplicar.id,
         );
         toast.success(
-          `✅ Regra aplicada! ${resultado.total_modificado} transações atualizadas.`
+          `✅ Regra aplicada! ${resultado.total_modificado} transações atualizadas.`,
         );
         setRegraParaAplicar(null);
         router.push(`/transacao/${transacaoId}?${queryString}`);

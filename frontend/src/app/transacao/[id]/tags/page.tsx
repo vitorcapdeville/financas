@@ -1,7 +1,6 @@
 import { transacoesService } from "@/services/api.service";
 import { tagsServerService } from "@/services/tags.server";
 import { Tag } from "@/types";
-import Link from "next/link";
 import FormGerenciarTags from "@/components/FormGerenciarTags";
 import HeaderEdicao from "@/components/HeaderEdicao";
 import ResumoTransacao from "@/components/ResumoTransacao";
@@ -15,6 +14,9 @@ interface TagsPageProps {
     periodo?: string;
     diaInicio?: string;
     criterio?: string;
+    usuario_id?: string;
+    tags?: string;
+    sem_tags?: string;
   }>;
 }
 
@@ -25,14 +27,15 @@ export default async function TagsPage({
   // Next.js 16: params e searchParams são Promises
   const { id: idStr } = await params;
   const search = await searchParams;
-
   const id = parseInt(idStr);
 
-  // Constrói query string preservando período, diaInicio e criterio
   const queryParams = new URLSearchParams();
   if (search.periodo) queryParams.set("periodo", search.periodo);
   if (search.diaInicio) queryParams.set("diaInicio", search.diaInicio);
   if (search.criterio) queryParams.set("criterio", search.criterio);
+  if (search.tags) queryParams.set("tags", search.tags);
+  if (search.usuario_id) queryParams.set("usuario_id", search.usuario_id);
+  if (search.sem_tags) queryParams.set("sem_tags", search.sem_tags);
   const queryString = queryParams.toString();
 
   // Busca transação no servidor
