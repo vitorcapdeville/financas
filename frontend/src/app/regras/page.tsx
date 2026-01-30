@@ -1,23 +1,22 @@
-import { regrasServerService } from "@/services/regras.server";
+import { regrasService } from "@/services/api.service";
 import { TipoAcao } from "@/types";
 import Link from "next/link";
 import { ListaRegras } from "@/components/ListaRegras";
 import { BotaoAplicarTodasRegras } from "@/components/BotaoAplicarTodasRegras";
-import BotaoVoltar from "@/components/BotaoVoltar";
 
 export default async function RegrasPage() {
-  const regras = await regrasServerService.listar();
+  const regras = await regrasService.listar();
 
   // Agrupa regras por tipo de ação
   const regrasPorTipo = {
     [TipoAcao.ALTERAR_CATEGORIA]: regras.filter(
-      (r) => r.tipo_acao === TipoAcao.ALTERAR_CATEGORIA
+      (r) => r.tipo_acao === TipoAcao.ALTERAR_CATEGORIA,
     ),
     [TipoAcao.ADICIONAR_TAGS]: regras.filter(
-      (r) => r.tipo_acao === TipoAcao.ADICIONAR_TAGS
+      (r) => r.tipo_acao === TipoAcao.ADICIONAR_TAGS,
     ),
     [TipoAcao.ALTERAR_VALOR]: regras.filter(
-      (r) => r.tipo_acao === TipoAcao.ALTERAR_VALOR
+      (r) => r.tipo_acao === TipoAcao.ALTERAR_VALOR,
     ),
   };
 

@@ -133,6 +133,7 @@ export interface RegraCreate {
   criterio_tipo: CriterioTipo;
   criterio_valor: string;
   acao_valor: string;
+  tag_ids?: number[];
 }
 
 export interface RegraUpdate {

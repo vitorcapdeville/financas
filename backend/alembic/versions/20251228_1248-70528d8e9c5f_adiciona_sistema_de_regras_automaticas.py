@@ -39,7 +39,6 @@ def upgrade() -> None:
     op.create_table('regratag',
     sa.Column('regra_id', sa.Integer(), nullable=False),
     sa.Column('tag_id', sa.Integer(), nullable=False),
-    sa.Column('criado_em', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['regra_id'], ['regra.id'], ),
     sa.ForeignKeyConstraint(['tag_id'], ['tag.id'], ),
     sa.PrimaryKeyConstraint('regra_id', 'tag_id')

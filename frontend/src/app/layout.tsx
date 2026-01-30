@@ -3,7 +3,7 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { ConfigLoader } from "@/components/ConfigLoader";
 import { AppLayout } from "@/components/AppLayout";
-import { configuracoesServerService } from "@/services/configuracoes.server";
+import { configuracoesService } from "@/services/api.service";
 
 export const metadata: Metadata = {
   title: {
@@ -19,7 +19,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   // Carrega configurações apenas uma vez ao iniciar o app
-  const configuracoes = await configuracoesServerService.listarTodas();
+  const configuracoes = await configuracoesService.listarTodas();
   const diaInicioPeriodo = parseInt(configuracoes.diaInicioPeriodo) || 1;
   const criterioDataTransacao =
     configuracoes.criterio_data_transacao || "data_transacao";

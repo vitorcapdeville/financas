@@ -1,5 +1,5 @@
 import { transacoesService } from "@/services/api.service";
-import { tagsServerService } from "@/services/tags.server";
+import { tagsService } from "@/services/api.service";
 import { formatarData, formatarMoeda } from "@/utils/format";
 import { Tag } from "@/types";
 import Link from "next/link";
@@ -45,7 +45,7 @@ export default async function TransacaoPage({
   // Busca todas as tags no servidor
   let todasTags: Tag[];
   try {
-    todasTags = await tagsServerService.listar();
+    todasTags = await tagsService.listar();
   } catch (error) {
     console.error("Erro ao carregar tags:", error);
     todasTags = [];

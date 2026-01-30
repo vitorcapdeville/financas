@@ -1,10 +1,9 @@
-import { configuracoesServerService } from "@/services/configuracoes.server";
-import BotaoVoltar from "@/components/BotaoVoltar";
+import { configuracoesService } from "@/services/api.service";
 import FormularioConfiguracoes from "@/components/FormularioConfiguracoes";
 
 // ✅ Server Component - busca dados no servidor
 export default async function ConfiguracoesPage() {
-  const configuracoes = await configuracoesServerService.listarTodas();
+  const configuracoes = await configuracoesService.listarTodas();
 
   return (
     <>

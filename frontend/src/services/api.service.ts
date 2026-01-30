@@ -220,12 +220,34 @@ export const importacaoService = {
 };
 
 export const configuracoesService = {
+  _obterConfiguracao(
+    chave: string,
+  ): Promise<{ chave: string; valor: string | null }> {
+    return handleFetch<{ chave: string; valor: string | null }>(
+      `${API_URL}/configuracoes/${chave}`,
+      { cache: "no-store" },
+    );
+  },
+
+  async listarTodas(): Promise<Record<string, string>> {
+    // Busca as configurações conhecidas
+    const [diaInicio, criterio] = await Promise.all([
+      this._obterConfiguracao("diaInicioPeriodo"),
+      this._obterConfiguracao("criterio_data_transacao"),
+    ]);
+
+    return {
+      diaInicioPeriodo: diaInicio.valor || "1",
+      criterio_data_transacao: criterio.valor || "data_transacao",
+    };
+  },
+
   async salvar(
     chave: string,
     valor: string,
   ): Promise<{ chave: string; valor: string }> {
     return handleFetch<{ chave: string; valor: string }>(
-      `${API_URL}/configuracoes/`,
+      `${API_URL}/configuracoes`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -259,15 +281,24 @@ export const tagsService = {
 };
 
 export const regrasService = {
-  async criar(regra: RegraCreate, tagIds?: number[]): Promise<Regra> {
-    const queryParams = new URLSearchParams();
-    if (tagIds && tagIds.length > 0) {
-      tagIds.forEach((id) => queryParams.append("tag_ids", id.toString()));
+  async listar(params?: {
+    ativo?: boolean;
+    tipo_acao?: string;
+  }): Promise<Regra[]> {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, value.toString());
+        }
+      });
     }
 
-    const url = `${API_URL}/regras${
-      queryParams.toString() ? `?${queryParams.toString()}` : ""
-    }`;
+    const url = `${API_URL}/regras?${searchParams.toString()}`;
+    return handleFetch<Regra[]>(url, { cache: "no-store" });
+  },
+  async criar(regra: RegraCreate): Promise<Regra> {
+    const url = `${API_URL}/regras`;
     return handleFetch<Regra>(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

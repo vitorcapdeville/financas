@@ -1,11 +1,9 @@
-import { tagsServerService } from "@/services/tags.server";
-import BotaoVoltar from "@/components/BotaoVoltar";
+import { tagsService } from "@/services/api.service";
 import FormularioNovaTag from "@/components/FormularioNovaTag";
 import ListaTags from "@/components/ListaTags";
 
-// ✅ Server Component - busca dados no servidor
 export default async function TagsPage() {
-  const tags = await tagsServerService.listar();
+  const tags = await tagsService.listar();
 
   return (
     <>

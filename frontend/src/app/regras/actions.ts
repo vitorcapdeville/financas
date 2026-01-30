@@ -15,10 +15,8 @@ export async function criarRegraAction(params: {
   acao_valor: string;
   tag_ids?: number[];
 }) {
-  const { tag_ids, ...regra_data } = params;
-
   try {
-    const result = await regrasService.criar(regra_data, tag_ids);
+    const result = await regrasService.criar(params);
 
     revalidatePath("/regras");
     revalidatePath("/"); // Revalida dashboard caso regras afetem resumo
@@ -28,7 +26,7 @@ export async function criarRegraAction(params: {
     throw new Error(
       `Erro ao criar regra: ${
         error instanceof Error ? error.message : "Erro desconhecido"
-      }`
+      }`,
     );
   }
 }
@@ -38,12 +36,12 @@ export async function criarRegraAction(params: {
  */
 export async function atualizarPrioridadeAction(
   regraId: number,
-  novaPrioridade: number
+  novaPrioridade: number,
 ) {
   try {
     const result = await regrasService.atualizarPrioridade(
       regraId,
-      novaPrioridade
+      novaPrioridade,
     );
 
     revalidatePath("/regras");
@@ -53,7 +51,7 @@ export async function atualizarPrioridadeAction(
     throw new Error(
       `Erro ao atualizar prioridade: ${
         error instanceof Error ? error.message : "Erro desconhecido"
-      }`
+      }`,
     );
   }
 }
@@ -72,7 +70,7 @@ export async function toggleAtivoAction(regraId: number) {
     throw new Error(
       `Erro ao alterar status da regra: ${
         error instanceof Error ? error.message : "Erro desconhecido"
-      }`
+      }`,
     );
   }
 }
@@ -92,7 +90,7 @@ export async function deletarRegraAction(regraId: number) {
     throw new Error(
       `Erro ao deletar regra: ${
         error instanceof Error ? error.message : "Erro desconhecido"
-      }`
+      }`,
     );
   }
 }
@@ -112,7 +110,7 @@ export async function aplicarRegraRetroativamenteAction(regraId: number) {
     throw new Error(
       `Erro ao aplicar regra: ${
         error instanceof Error ? error.message : "Erro desconhecido"
-      }`
+      }`,
     );
   }
 }
@@ -132,7 +130,7 @@ export async function aplicarTodasRegrasAction() {
     throw new Error(
       `Erro ao aplicar todas as regras: ${
         error instanceof Error ? error.message : "Erro desconhecido"
-      }`
+      }`,
     );
   }
 }
