@@ -96,6 +96,9 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
         tipo: tipo || undefined,
         tags: searchParams.tags,
         criterio_data_transacao: criterio,
+        sem_tags: searchParams.sem_tags === "true",
+        sem_categoria: categoria === "Sem categoria",
+        usuario_id: usuarioIdSelecionado,
       });
 
       const total = transacoesMes.reduce((sum, t) => sum + t.valor, 0);
