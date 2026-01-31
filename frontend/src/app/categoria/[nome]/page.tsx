@@ -8,6 +8,7 @@ import {
 import FiltrosPeriodo from "@/components/FiltrosPeriodo";
 import FiltroTags from "@/components/FiltroTags";
 import Link from "next/link";
+import ListaTransacoes from "@/components/ListaTransacoes";
 
 interface CategoriaPageProps {
   params: Promise<{
@@ -238,71 +239,7 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
               Transações ({transacoes.length})
             </h2>
           </div>
-          <div className="divide-y divide-[#d4c5b9]">
-            {transacoes.map((transacao) => (
-              <Link
-                key={transacao.id}
-                href={`/transacao/${transacao.id}?${queryString}`}
-                className="block p-6 hover:bg-gradient-to-r hover:from-[#0f3d3e]/5 hover:to-transparent transition-all duration-300 group relative"
-              >
-                <div
-                  className="absolute left-0 top-0 bottom-0 w-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{
-                    background:
-                      transacao.tipo === "entrada"
-                        ? "linear-gradient(180deg, #2d8659 0%, #38a169 100%)"
-                        : "linear-gradient(180deg, #c44536 0%, #e67e22 100%)",
-                  }}
-                ></div>
-                <div className="flex justify-between items-start pl-2">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-[#0f3d3e] mb-1 group-hover:text-[#156064] transition-colors">
-                      {transacao.descricao}
-                    </h3>
-                    <p className="text-sm text-[#8b8378]">
-                      {formatarData(transacao.data)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div
-                        className="w-7 h-7 rounded-lg flex items-center justify-center"
-                        style={{
-                          background:
-                            transacao.tipo === "entrada"
-                              ? "linear-gradient(135deg, #2d8659, #38a169)"
-                              : "linear-gradient(135deg, #c44536, #e67e22)",
-                        }}
-                      >
-                        <span className="text-white text-sm font-bold">
-                          {transacao.tipo === "entrada" ? "↗" : "↘"}
-                        </span>
-                      </div>
-                      <p
-                        className="text-lg font-bold text-financial"
-                        style={{
-                          color:
-                            transacao.tipo === "entrada"
-                              ? "#2d8659"
-                              : "#c44536",
-                        }}
-                      >
-                        {transacao.tipo === "entrada" ? "+" : "-"}
-                        {formatarMoeda(transacao.valor)}
-                      </p>
-                    </div>
-                    <p className="text-xs text-[#8b8378]">
-                      {transacao.origem === "manual"
-                        ? "Manual"
-                        : transacao.origem === "extrato_bancario"
-                          ? "Extrato"
-                          : "Fatura"}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <ListaTransacoes transacoes={transacoes} queryString={queryString} />
         </div>
       )}
     </>
