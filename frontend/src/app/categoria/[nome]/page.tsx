@@ -5,6 +5,7 @@ import {
   calcularPeriodoCustomizado,
   extrairPeriodoDaURL,
 } from "@/utils/periodo";
+import { construirQueryString } from "@/utils/query";
 import FiltrosPeriodo from "@/components/FiltrosPeriodo";
 import FiltroTags from "@/components/FiltroTags";
 import Link from "next/link";
@@ -43,17 +44,15 @@ export default async function CategoriaPage(props: CategoriaPageProps) {
     diaInicio,
   );
 
-  // Constrói query string preservando período, diaInicio, criterio, tags, sem_tags e origem
-  const queryParams = new URLSearchParams();
-  if (periodo) queryParams.set("periodo", periodo);
-  if (diaInicio) queryParams.set("diaInicio", diaInicio.toString());
-  if (criterio) queryParams.set("criterio", criterio);
-  if (searchParams.tags) queryParams.set("tags", searchParams.tags);
-  if (searchParams.sem_tags) queryParams.set("sem_tags", searchParams.sem_tags);
-  if (usuarioIdSelecionado)
-    queryParams.set("usuario_id", usuarioIdSelecionado.toString());
-  queryParams.set("origem", `categoria:${categoria}`);
-  const queryString = queryParams.toString();
+  // Constrói query string preservando filtros (usa utilitário compartilhado)
+  const queryString = construirQueryString({
+    searchParams,
+    periodo,
+    diaInicio,
+    criterio,
+    usuarioIdSelecionado,
+    origem: `categoria:${categoria}`,
+  });
 
   // Busca transações do período atual
   let transacoes: import("@/types").Transacao[];

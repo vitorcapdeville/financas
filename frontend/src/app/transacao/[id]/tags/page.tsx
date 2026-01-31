@@ -1,5 +1,6 @@
 import { transacoesService } from "@/services/api.service";
 import { tagsService } from "@/services/api.service";
+import { construirQueryString } from "@/utils/query";
 import { Tag } from "@/types";
 import FormGerenciarTags from "@/components/FormGerenciarTags";
 import HeaderEdicao from "@/components/HeaderEdicao";
@@ -29,14 +30,7 @@ export default async function TagsPage({
   const search = await searchParams;
   const id = parseInt(idStr);
 
-  const queryParams = new URLSearchParams();
-  if (search.periodo) queryParams.set("periodo", search.periodo);
-  if (search.diaInicio) queryParams.set("diaInicio", search.diaInicio);
-  if (search.criterio) queryParams.set("criterio", search.criterio);
-  if (search.tags) queryParams.set("tags", search.tags);
-  if (search.usuario_id) queryParams.set("usuario_id", search.usuario_id);
-  if (search.sem_tags) queryParams.set("sem_tags", search.sem_tags);
-  const queryString = queryParams.toString();
+  const queryString = construirQueryString({ searchParams: search });
 
   // Busca transação no servidor
   let transacao;

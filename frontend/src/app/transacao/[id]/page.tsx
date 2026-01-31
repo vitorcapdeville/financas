@@ -1,6 +1,7 @@
 import { transacoesService } from "@/services/api.service";
 import { tagsService } from "@/services/api.service";
 import { formatarData, formatarMoeda } from "@/utils/format";
+import { construirQueryString } from "@/utils/query";
 import { Tag } from "@/types";
 import Link from "next/link";
 import BotoesAcaoTransacao from "@/components/BotoesAcaoTransacao";
@@ -26,12 +27,8 @@ export default async function TransacaoPage({
 
   const id = parseInt(idStr);
 
-  // Constrói query string preservando período, diaInicio e criterio
-  const queryParams = new URLSearchParams();
-  if (search.periodo) queryParams.set("periodo", search.periodo);
-  if (search.diaInicio) queryParams.set("diaInicio", search.diaInicio);
-  if (search.criterio) queryParams.set("criterio", search.criterio);
-  const queryString = queryParams.toString();
+  // Constrói query string preservando filtros (usa utilitário compartilhado)
+  const queryString = construirQueryString({ searchParams: search });
 
   // Busca transação no servidor
   let transacao;

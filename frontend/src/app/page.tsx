@@ -1,6 +1,7 @@
 import { transacoesService, usuariosService } from "@/services/api.service";
 import FiltroUsuario from "@/components/FiltroUsuario";
 import { formatarMoeda } from "@/utils/format";
+import { construirQueryString } from "@/utils/query";
 import {
   calcularPeriodoCustomizado,
   extrairPeriodoDaURL,
@@ -35,16 +36,14 @@ export default async function Home(props: HomeProps) {
     diaInicio,
   );
 
-  // Constrói query string preservando período, diaInicio, criterio, tags e sem_tags
-  const queryParams = new URLSearchParams();
-  if (periodo) queryParams.set("periodo", periodo);
-  if (diaInicio) queryParams.set("diaInicio", diaInicio.toString());
-  if (criterio) queryParams.set("criterio", criterio);
-  if (searchParams.tags) queryParams.set("tags", searchParams.tags);
-  if (searchParams.sem_tags) queryParams.set("sem_tags", searchParams.sem_tags);
-  if (usuarioIdSelecionado)
-    queryParams.set("usuario_id", usuarioIdSelecionado.toString());
-  const queryString = queryParams.toString();
+  // Constrói query string preservando filtros (usa utilitário compartilhado)
+  const queryString = construirQueryString({
+    searchParams,
+    periodo,
+    diaInicio,
+    criterio,
+    usuarioIdSelecionado,
+  });
 
   // Busca dados no servidor
   let resumo = null;

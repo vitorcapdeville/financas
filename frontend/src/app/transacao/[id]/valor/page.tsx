@@ -1,4 +1,5 @@
 import { transacoesService } from "@/services/api.service";
+import { construirQueryString } from "@/utils/query";
 import Link from "next/link";
 import FormEditarValor from "@/components/FormEditarValor";
 import HeaderEdicao from "@/components/HeaderEdicao";
@@ -29,15 +30,7 @@ export default async function ValorPage({
 
   const id = parseInt(idStr);
 
-  // Constrói query string preservando período, diaInicio e criterio
-  const queryParams = new URLSearchParams();
-  if (search.periodo) queryParams.set("periodo", search.periodo);
-  if (search.diaInicio) queryParams.set("diaInicio", search.diaInicio);
-  if (search.criterio) queryParams.set("criterio", search.criterio);
-  if (search.tags) queryParams.set("tags", search.tags);
-  if (search.usuario_id) queryParams.set("usuario_id", search.usuario_id);
-  if (search.sem_tags) queryParams.set("sem_tags", search.sem_tags);
-  const queryString = queryParams.toString();
+  const queryString = construirQueryString({ searchParams: search });
 
   // Busca transação no servidor
   let transacao;

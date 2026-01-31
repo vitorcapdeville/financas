@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { construirQueryString } from "@/utils/query";
 import { useState } from "react";
 
 interface SidebarProps {
@@ -13,23 +14,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const construirQueryString = () => {
-    const params = new URLSearchParams();
-    const periodo = searchParams.get("periodo");
-    const diaInicio = searchParams.get("diaInicio");
-    const criterio = searchParams.get("criterio");
-    const tags = searchParams.get("tags");
-    const sem_tags = searchParams.get("sem_tags");
-    const usuario_id = searchParams.get("usuario_id");
-
-    if (periodo) params.set("periodo", periodo);
-    if (diaInicio) params.set("diaInicio", diaInicio);
-    if (criterio) params.set("criterio", criterio);
-    if (tags) params.set("tags", tags);
-    if (usuario_id) params.set("usuario_id", usuario_id);
-    if (sem_tags) params.set("sem_tags", sem_tags);
-    return params.toString();
-  };
+  // Usamos utilitário compartilhado para preservar filtros na URL
 
   const links = [
     { href: "/", label: "Dashboard", icon: "📊", exact: true },
@@ -101,7 +86,16 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           {/* Navigation */}
           <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
             {links.map((link, idx) => {
-              const queryString = construirQueryString();
+              const queryString = construirQueryString({
+                searchParams: {
+                  periodo: searchParams.get("periodo"),
+                  diaInicio: searchParams.get("diaInicio"),
+                  criterio: searchParams.get("criterio"),
+                  tags: searchParams.get("tags"),
+                  sem_tags: searchParams.get("sem_tags"),
+                  usuario_id: searchParams.get("usuario_id"),
+                },
+              });
               const href = queryString
                 ? `${link.href}?${queryString}`
                 : link.href;
