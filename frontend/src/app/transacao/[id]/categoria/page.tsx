@@ -27,7 +27,6 @@ export default async function CategoriaPage({
   // Next.js 16: params e searchParams são Promises
   const { id: idStr } = await params;
   const search = await searchParams;
-  console.log("Search Params:", search);
   const id = parseInt(idStr);
 
   // Constrói query string preservando filtros (usa utilitário compartilhado)

@@ -10,7 +10,7 @@ export default function ImportarPage() {
   const [uploading, setUploading] = useState(false);
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [usuarioSelecionado, setUsuarioSelecionado] = useState<number>(1); // Padrão: "Não definido"
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState<number>(0); 
 
   // Carregar lista de usuários
   useEffect(() => {
@@ -18,6 +18,7 @@ export default function ImportarPage() {
       try {
         const lista = await usuariosService.listar();
         setUsuarios(lista);
+        setUsuarioSelecionado(lista[0]?.id || 0);
       } catch (error) {
         console.error("Erro ao carregar usuários:", error);
         toast.error("Erro ao carregar lista de usuários");

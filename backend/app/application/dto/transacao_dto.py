@@ -72,7 +72,6 @@ class FiltrosTransacaoDTO:
     tag_ids: Optional[List[int]] = None
     sem_tags: bool = False  # Filtrar apenas transações sem tags
     sem_categoria: bool = False  # Filtrar apenas transações sem categoria
-    criterio_data: str = "data_transacao"
     usuario_id: Optional[int] = None  # Novo filtro por usuário
 
 

@@ -1,6 +1,7 @@
 """
 Caso de uso: Obter Resumo Mensal de Transações
 """
+
 from datetime import date
 from typing import Dict, List, Optional
 
@@ -12,22 +13,18 @@ from app.domain.repositories.transacao_repository import ITransacaoRepository
 class ObterResumoMensalUseCase:
     """
     Caso de uso para obter resumo mensal de entradas/saídas agrupadas por categoria.
-    
+
     Responsabilidades:
     - Calcular período baseado em mes/ano ou data_inicio/data_fim
     - Aplicar critério de data configurado (data_transacao ou data_fatura)
     - Agrupar transações por categoria e tipo
     - Calcular totais e saldo
     """
-    
-    def __init__(
-        self,
-        transacao_repository: ITransacaoRepository,
-        configuracao_repository: IConfiguracaoRepository
-    ):
+
+    def __init__(self, transacao_repository: ITransacaoRepository, configuracao_repository: IConfiguracaoRepository):
         self._transacao_repository = transacao_repository
         self._configuracao_repository = configuracao_repository
-    
+
     def execute(
         self,
         mes: Optional[int] = None,
@@ -36,11 +33,11 @@ class ObterResumoMensalUseCase:
         data_fim: Optional[date] = None,
         tag_ids: Optional[List[int]] = None,
         sem_tags: bool = False,
-        usuario_id: Optional[int] = None
+        usuario_id: Optional[int] = None,
     ) -> ResumoMensalDTO:
         """
         Executa o caso de uso de resumo mensal.
-        
+
         Args:
             mes: Mês (1-12)
             ano: Ano (ex: 2024)
@@ -48,26 +45,24 @@ class ObterResumoMensalUseCase:
             data_fim: Data de fim (prioridade sobre mes/ano)
             tag_ids: IDs de tags para filtrar
             sem_tags: Se True, inclui transações sem tags (lógica OR com tag_ids)
-            
+
         Returns:
             ResumoMensalDTO com totais e agrupamentos por categoria
-            
+
         Raises:
             ValidationException: Se nem mes/ano nem data_inicio/data_fim fornecidos
         """
         from app.application.exceptions.application_exceptions import ValidationException
-        
+
         # Validar que ao menos um período foi fornecido
         if not (data_inicio and data_fim) and not (mes and ano):
             raise ValidationException("Forneça mes/ano ou data_inicio/data_fim")
-        
+
         # Obter critério de data configurado
-        try:
-            config = self._configuracao_repository.obter("criterio_data_transacao")
-            criterio = config.valor
-        except:
-            criterio = "data_transacao"  # Default
-        
+        criterio = self._configuracao_repository.obter("criterio_data_transacao")
+        if not criterio:
+            raise ValueError("Configuração 'criterio_data_transacao' não encontrada.")
+
         # Buscar transações com os filtros aplicados
         transacoes = self._transacao_repository.listar(
             mes=mes,
@@ -78,26 +73,26 @@ class ObterResumoMensalUseCase:
             sem_tags=sem_tags,
             sem_categoria=False,  # Nunca filtrar sem categoria no resumo
             criterio_data=criterio,
-            usuario_id=usuario_id
+            usuario_id=usuario_id,
         )
-        
+
         # Agrupar por categoria e tipo
         entradas_por_categoria: Dict[str, float] = {}
         saidas_por_categoria: Dict[str, float] = {}
         total_entradas = 0.0
         total_saidas = 0.0
-        
+
         for transacao in transacoes:
             categoria = transacao.categoria or "Sem categoria"
             valor = transacao.valor
-            
+
             if transacao.tipo.value == "entrada":
                 entradas_por_categoria[categoria] = entradas_por_categoria.get(categoria, 0.0) + valor
                 total_entradas += valor
             else:  # saida
                 saidas_por_categoria[categoria] = saidas_por_categoria.get(categoria, 0.0) + valor
                 total_saidas += valor
-        
+
         # Criar DTO de resumo
         return ResumoMensalDTO(
             mes=mes,
@@ -106,5 +101,5 @@ class ObterResumoMensalUseCase:
             total_saidas=total_saidas,
             saldo=total_entradas - total_saidas,
             entradas_por_categoria=entradas_por_categoria,
-            saidas_por_categoria=saidas_por_categoria
+            saidas_por_categoria=saidas_por_categoria,
         )
